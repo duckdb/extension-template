@@ -1,0 +1,7 @@
+[submodule "duckdb"]
+	path = duckdb
+	url = https://github.com/duckdb/duckdb
+	branch = master
+[submodule "master"]
+	path = master
+	url = https://github.com/duckdb/duckdb
