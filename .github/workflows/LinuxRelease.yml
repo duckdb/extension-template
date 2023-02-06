@@ -95,7 +95,7 @@ jobs:
       with:
         name: ${{matrix.arch}}-extensions
         path: |
-          build/release/extension/boilerplate/boilerplate.duckdb_extension
+          build/release/extension/quack/quack.duckdb_extension
 
     - name: Deploy
       shell: bash
@@ -115,8 +115,8 @@ jobs:
           echo 'No key set, skipping'
         elif [[ "$GITHUB_REF" =~ ^(refs/tags/v.+)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh boilerplate ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
+          ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
         elif [[ "$GITHUB_REF" =~ ^(refs/heads/main)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh boilerplate `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
+          ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
         fi

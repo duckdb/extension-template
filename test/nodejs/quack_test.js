@@ -1,7 +1,7 @@
 var duckdb = require('../../duckdb/tools/nodejs');
 var assert = require('assert');
 
-describe(`boilerplate extension`, () => {
+describe(`quack extension`, () => {
     let db;
     let conn;
     before((done) => {
@@ -11,9 +11,9 @@ describe(`boilerplate extension`, () => {
     });
 
     it('function should return expected constant', function (done) {
-        db.all("SELECT boilerplate() as value;", function (err, res) {
+        db.all("SELECT quack('Sam') as value;", function (err, res) {
             if (err) throw err;
-            assert.deepEqual(res, [{value: "I'm a boilerplate!"}]);
+            assert.deepEqual(res, [{value: "Quack Sam 🐥"}]);
             done();
         });
     });
