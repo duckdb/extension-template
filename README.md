@@ -9,11 +9,13 @@ To build the extension:
 ```sh
 make
 ```
+**Note:** If you just cloned the repository, don't forget to run `git submodule init && git submodule update` to fetch the appropriate duckdb version.
+
 The main binaries that will be built are:
 ```sh
-./build/release/duckdb/duckdb
-./build/release/duckdb/test/unittest
-./build/release/duckdb/extension/<extension_name>/<extension_name>.duckdb_extension
+./build/release/duckdb
+./build/release/test/unittest
+./build/release/extension/<extension_name>/<extension_name>.duckdb_extension
 ```
 - `duckdb` is the binary for the duckdb shell with the extension code automatically loaded. 
 - `unittest` is the test runner of duckdb. Again, the extension is already linked into the binary.
@@ -48,7 +50,7 @@ Feel free to delete the script after this step.
 
 Now you're good to go! After a (re)build, you should now be able to use your duckdb extension:
 ```
-./build/release/duckdb/duckdb
+./build/release/duckdb
 D select do_a_<extension_name_you_chose>() as result;
 ┌───────────────────────────────────┐
 │                result             │
@@ -58,7 +60,7 @@ D select do_a_<extension_name_you_chose>() as result;
 └───────────────────────────────────┘
 ```
 
-For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the in-tree extensions in https://github.com/duckdb/duckdb and the out-of-tree extensions in https://github.com/duckdblabs! 
+For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the in-tree [extensions](https://github.com/duckdb/duckdb/tree/master/extension) (or in your `duckdb` submodule) and the out-of-tree extensions in [duckdblabs](https://github.com/duckdblabs)! 
 
 ## Distributing your extension
 Easy distribution of extensions built with this template is facilitated using a similar process used by DuckDB itself. Binaries are generated for various versions/platforms allowing duckdb to automatically install the correct binary.
