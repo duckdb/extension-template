@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys, os
 from pathlib import Path
@@ -36,8 +36,8 @@ replace("./Makefile", string_to_find.upper(), string_to_replace.upper())
 replace("./README.md", string_to_find, string_to_replace)
 
 # rename files
-os.rename(f'test/python/{string_to_find}_test.py',f'test/python/{string_to_replace}_test.py')
-os.rename(f'test/sql/{string_to_find}.test',f'test/sql/{string_to_replace}.test')
-os.rename(f'src/{string_to_find}_extension.cpp',f'src/{string_to_replace}_extension.cpp')
-os.rename(f'src/include/{string_to_find}_extension.hpp',f'src/include/{string_to_replace}_extension.hpp')
-os.rename(f'test/nodejs/{string_to_find}_test.js',f'test/nodejs/{string_to_replace}_test.js')
+os.rename(f'test/python/{string_to_find}_test.py', f'test/python/{string_to_replace}_test.py')
+os.rename(f'test/sql/{string_to_find}.test', f'test/sql/{string_to_replace}.test')
+os.rename(f'src/{string_to_find}_extension.cpp', f'src/{string_to_replace}_extension.cpp')
+os.rename(f'src/include/{string_to_find}_extension.hpp', f'src/include/{string_to_replace}_extension.hpp')
+os.rename(f'test/nodejs/{string_to_find}_test.js', f'test/nodejs/{string_to_replace}_test.js')

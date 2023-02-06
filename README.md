@@ -44,7 +44,7 @@ make test
 ## Getting started with your own extension
 After creating a repository from this template, the first step is to name your extension. To rename the extension, run:
 ```
-./scripts/set_extension_name.sh <extension_name_you_want>
+python3 ./scripts/set_extension_name.py <extension_name_you_want>
 ```
 Feel free to delete the script after this step.
 
@@ -67,11 +67,11 @@ Easy distribution of extensions built with this template is facilitated using a 
 
 This step requires that you pass the following 4 parameters to your github repo as action secrets:
 
-secret name | description
---- | ---
-S3_REGION | s3 region holding your bucket
-S3_BUCKET | the name of the bucket to deploy to
-S3_DEPLOY_ID | the S3 key id
-S3_DEPLOY_KEY | the S3 key secret
+| -secret name   | description                         |
+| -------------- | ----------------------------------- |
+| -S3_REGION     | s3 region holding your bucket       |
+| -S3_BUCKET     | the name of the bucket to deploy to |
+| -S3_DEPLOY_ID  | the S3 key id                       |
+| -S3_DEPLOY_KEY | the S3 key secret                   |
 
 After setting these variables, all pushes to master will trigger a new (dev) release.
