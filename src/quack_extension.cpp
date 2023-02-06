@@ -16,12 +16,7 @@ inline void QuackScalarFun(DataChunk &args, ExpressionState &state, Vector &resu
     UnaryExecutor::Execute<string_t, string_t>(
 	    name_vector, result, args.size(),
 	    [&](string_t name) { 
-            std::string out_str = "Quack "+name.GetString()+" 🐥";
-            auto result_string = StringVector::EmptyString(result, out_str.size());
-			auto result_data = result_string.GetDataWriteable();
-			memcpy(result_data, out_str.c_str(), out_str.size());
-			result_string.Finalize();
-			return result_string;
+			return StringVector::AddString(result, "Quack "+name.GetString()+" 🐥");;
         });
 }
 
