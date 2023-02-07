@@ -4,13 +4,18 @@ This template is currently work-in-progress. Feel free to play around with it an
 # DuckDB Extension Template
 The main goal of this template is to allow users to easily develop, test and distribute their own DuckDB extension.
 
-## Build
+## Getting started
+First step to getting started is to create your own repo from this template by clicking `Use this template`. Then clone your new repository using 
+```sh
+git clone --recurse-submodules https://github.com/<you>/<your-new-extension-repo>.git
+```
+Note that `--recurse-submodules` will ensure the correct version of duckdb is pulled allowing you to get started right away.
+
+## Building
 To build the extension:
 ```sh
 make
 ```
-**Note:** If you just cloned the repository, don't forget to run `git submodule init && git submodule update` to fetch the appropriate duckdb version.
-
 The main binaries that will be built are:
 ```sh
 ./build/release/duckdb
@@ -27,12 +32,12 @@ To run the extension code, simply start the shell with `./build/release/duckdb`.
 Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `quack()` that takes a string arguments and returns a string:
 ```
 D select quack('Jane') as result;
-┌────────────────────┐
-│       result       │
-│      varchar       │
-├────────────────────┤
-│ Quack Jane 🐥       │
-└────────────────────┘
+┌───────────────┐
+│    result     │
+│    varchar    │
+├───────────────┤
+│ Quack Jane 🐥 │
+└───────────────┘
 ```
 
 ## Running the tests
@@ -51,13 +56,13 @@ Feel free to delete the script after this step.
 Now you're good to go! After a (re)build, you should now be able to use your duckdb extension:
 ```
 ./build/release/duckdb
-D select do_a_<extension_name_you_chose>() as result;
-┌───────────────────────────────────┐
-│                result             │
-│               varchar             │
-├───────────────────────────────────┤
-│ I'm a <extension_name_you_chose>! │
-└───────────────────────────────────┘
+D select <extension_name_you_chose>('Jane') as result;
+┌─────────────────────────────────────┐
+│                result               │
+│               varchar               │
+├─────────────────────────────────────┤
+│ <extension_name_you_chose> Jane 🐥  │
+└─────────────────────────────────────┘
 ```
 
 For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the in-tree [extensions](https://github.com/duckdb/duckdb/tree/master/extension) (or in your `duckdb` submodule) and the out-of-tree extensions in [duckdblabs](https://github.com/duckdblabs)! 
@@ -67,11 +72,11 @@ Easy distribution of extensions built with this template is facilitated using a 
 
 This step requires that you pass the following 4 parameters to your github repo as action secrets:
 
-| -secret name   | description                         |
-| -------------- | ----------------------------------- |
-| -S3_REGION     | s3 region holding your bucket       |
-| -S3_BUCKET     | the name of the bucket to deploy to |
-| -S3_DEPLOY_ID  | the S3 key id                       |
-| -S3_DEPLOY_KEY | the S3 key secret                   |
+| secret name   | description                         |
+| ------------- | ----------------------------------- |
+| S3_REGION     | s3 region holding your bucket       |
+| S3_BUCKET     | the name of the bucket to deploy to |
+| S3_DEPLOY_ID  | the S3 key id                       |
+| S3_DEPLOY_KEY | the S3 key secret                   |
 
 After setting these variables, all pushes to master will trigger a new (dev) release.
