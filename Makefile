@@ -23,7 +23,7 @@ BUILD_FLAGS=-DEXTENSION_STATIC_BUILD=1 -DBUILD_TPCH_EXTENSION=1 -DBUILD_PARQUET_
 CLIENT_FLAGS :=
 
 # These flags will make DuckDB build the extension
-EXTENSION_FLAGS=-DDUCKDB_OOT_EXTENSION_NAMES="boilerplate" -DDUCKDB_OOT_EXTENSION_BOILERPLATE_PATH="$(PROJ_DIR)" -DDUCKDB_OOT_EXTENSION_BOILERPLATE_SHOULD_LINK="TRUE" -DDUCKDB_OOT_EXTENSION_BOILERPLATE_INCLUDE_PATH="$(PROJ_DIR)src/include"
+EXTENSION_FLAGS=-DDUCKDB_OOT_EXTENSION_NAMES="quack" -DDUCKDB_OOT_EXTENSION_QUACK_PATH="$(PROJ_DIR)" -DDUCKDB_OOT_EXTENSION_QUACK_SHOULD_LINK="TRUE" -DDUCKDB_OOT_EXTENSION_QUACK_INCLUDE_PATH="$(PROJ_DIR)src/include"
 
 pull:
 	git submodule init
@@ -90,7 +90,7 @@ test_release_python: release_python
 
 # TODO make this clever
 format:
-	clang-format --sort-includes=0 -style=file -i src/boilerplate_extension.cpp
+	clang-format --sort-includes=0 -style=file -i src/quack_extension.cpp
 	cmake-format -i CMakeLists.txt
 	cmake-format -i src/CMakeLists.txt
 

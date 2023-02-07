@@ -24,14 +24,14 @@ The main binaries that will be built are:
 ## Running the extension
 To run the extension code, simply start the shell with `./build/release/duckdb`.
 
-Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `do_a_boilerplate` that takes no arguments and returns a string:
+Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `quack()` that takes a string arguments and returns a string:
 ```
-D select do_a_boilerplate() as result;
+D select quack('Jane') as result;
 ┌────────────────────┐
 │       result       │
 │      varchar       │
 ├────────────────────┤
-│ I'm a boilerplate! │
+│ Quack Jane 🐥       │
 └────────────────────┘
 ```
 
