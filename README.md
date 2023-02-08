@@ -87,7 +87,7 @@ have full permissions to the bucket, and you will need to have ACLs enabled.
 
 ### Installing the deployed binaries
 To install your extension binaries from S3, you will need to do two things. Firstly, DuckDB should be launched with the 
-`allow_unsigned_extensions` option set to true. How to set this will depend on the client you're using. 
+`allow_unsigned_extensions` option set to true. How to set this will depend on the client you're using. Some examples:
 
 CLI:
 ```shell
@@ -105,18 +105,17 @@ db = new duckdb.Database(':memory:', {"allow_unsigned_extensions": "true"});
 ```
 
 Secondly, you will need to set the repository endpoint in DuckDB to the HTTP url of your bucket + version of the extension 
-you want to install.
+you want to install. To do this run the following SQL query in DuckDB:
 ```sql
-SET custom_extension_repository='bucket.s3.eu-west-1.amazonaws.com/duckcon/v0.0.1';
-    
+SET custom_extension_repository='bucket.s3.eu-west-1.amazonaws.com/<your_extension_name>/v0.0.1';
 ```
 
-After running these steps, you can install and load your extension using the regular INSTALL/LOAD command:
+After running these steps, you can install and load your extension using the regular INSTALL/LOAD commands in DuckDB:
 ```sql
-INSTALL <your extension name>
-LOAD <your extension name>
+INSTALL <your_extension_name>
+LOAD <your_extension_name>
 ```
-Note: your DuckDB version should match up with the binaries you have distributed. Which versions this is will be 
+Note: your DuckDB version should match up with the binaries you have distributed. Which versions this is, 
 depends on the commit you have pinned in your submodule and the extra versions you have specified in the GitHub actions 
 workflows.
 
