@@ -65,12 +65,15 @@ D select <extension_name_you_chose>('Jane') as result;
 └─────────────────────────────────────┘
 ```
 
-For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the in-tree [extensions](https://github.com/duckdb/duckdb/tree/master/extension) (or in your `duckdb` submodule) and the out-of-tree extensions in [duckdblabs](https://github.com/duckdblabs)! 
+For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the in-tree 
+[extensions](https://github.com/duckdb/duckdb/tree/master/extension) (or in your `duckdb` submodule) and the 
+out-of-tree extensions in [duckdblabs](https://github.com/duckdblabs)! 
 
 ## Distributing your extension
-Easy distribution of extensions built with this template is facilitated using a similar process used by DuckDB itself. Binaries are generated for various versions/platforms allowing duckdb to automatically install the correct binary.
+Easy distribution of extensions built with this template is facilitated using a similar process used by DuckDB itself. 
+Binaries are generated for various versions/platforms allowing duckdb to automatically install the correct binary.
 
-This step requires that you pass the following 4 parameters to your github repo as action secrets:
+This step requires that you pass the following 4 parameters to your GitHub repo as action secrets:
 
 | secret name   | description                         |
 | ------------- | ----------------------------------- |
@@ -79,4 +82,48 @@ This step requires that you pass the following 4 parameters to your github repo 
 | S3_DEPLOY_ID  | the S3 key id                       |
 | S3_DEPLOY_KEY | the S3 key secret                   |
 
-After setting these variables, all pushes to master will trigger a new (dev) release.
+After setting these variables, all pushes to master will trigger a new (dev) release. Note that your AWS token should
+have full permissions to the bucket, and you will need to have ACLs enabled.
+
+### Installing the deployed binaries
+To install your extension binaries from S3, you will need to do two things. Firstly, DuckDB should be launched with the 
+`allow_unsigned_extensions` option set to true. How to set this will depend on the client you're using. 
+
+CLI:
+```shell
+duckdb -unsigned
+```
+
+Python:
+```python
+con = duckdb.connect(':memory:', config={'allow_unsigned_extensions' : 'true'})
+```
+
+NodeJS:
+```js
+db = new duckdb.Database(':memory:', {"allow_unsigned_extensions": "true"});
+```
+
+Secondly, you will need to set the repository endpoint in DuckDB to the HTTP url of your bucket + version of the extension 
+you want to install.
+```sql
+SET custom_extension_repository='bucket.s3.eu-west-1.amazonaws.com/duckcon/v0.0.1';
+    
+```
+
+After running these steps, you can install and load your extension using the regular INSTALL/LOAD command:
+```sql
+INSTALL <your extension name>
+LOAD <your extension name>
+```
+Note: your DuckDB version should match up with the binaries you have distributed. Which versions this is will be 
+depends on the commit you have pinned in your submodule and the extra versions you have specified in the GitHub actions 
+workflows.
+
+## Setting up CLion 
+Configuring CLion with the extension template requires a little work. Firstly, make sure that the DuckDB submodule is available. 
+Then make sure to open `./duckdb/CMakeLists.txt` (so not the top level `CMakeLists.txt` file from this repo) as a project in CLion.
+Now to fix your project path go to `tools->CMake->Change Project Root`([docs](https://www.jetbrains.com/help/clion/change-project-root-directory.html)) to set the project root to the root dir of this repo.
+
+Now to configure the build targets, copy the CMake variables specified in the Makefile and ensure
+the build directory is set to `../build/<build_mode>`.
