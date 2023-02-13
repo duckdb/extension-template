@@ -11,7 +11,7 @@ concurrency:
 jobs:
   linux:
     name: Linux Extensions
-    if: github.repository == 'duckdb/extension-template'
+    if: env.RUN_RENAME_TEST == 'true'
     runs-on: ubuntu-latest
     container: ubuntu:16.04
     strategy:
@@ -68,7 +68,7 @@ jobs:
 
   macos:
     name: MacOS
-    if: github.repository == 'duckdb/extension-template'
+    if: env.RUN_RENAME_TEST == 'true'
     runs-on: macos-latest
     strategy:
       matrix:
@@ -119,7 +119,7 @@ jobs:
 
   windows:
     name: Windows Extensions (x64)
-    if: github.repository == 'duckdb/extension-template'
+    if: env.RUN_RENAME_TEST == 'true'
     runs-on: windows-latest
     strategy:
       matrix:
