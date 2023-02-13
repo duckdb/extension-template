@@ -3,6 +3,9 @@ on: [push, pull_request,repository_dispatch]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
 
 jobs:
   win-extensions-64:
@@ -26,13 +29,11 @@ jobs:
       - name: Checkout DuckDB to version
         # Add commits/tags to build against other DuckDB versions
         if: ${{ matrix.duckdb_version != '<submodule_version>'}}
-        shell: bash
         run: |
           cd duckdb
           git checkout ${{ matrix.duckdb_version }}
 
       - name: Build extension
-        shell: bash
         run: |
           make release
           build/release/test/Release/unittest.exe
@@ -44,7 +45,6 @@ jobs:
             build/release/extension/quack/quack.duckdb_extension
 
       - name: Deploy
-        shell: bash
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.S3_DEPLOY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DEPLOY_KEY }}

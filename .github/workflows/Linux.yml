@@ -3,6 +3,9 @@ on: [push, pull_request,repository_dispatch]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
 
 jobs:
   linux-extensions-64:
@@ -27,7 +30,6 @@ jobs:
     steps:
     - name: Install required ubuntu packages
       if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
-      shell: bash
       run: |
         apt-get update -y -qq
         apt-get install -y -qq software-properties-common
@@ -37,7 +39,6 @@ jobs:
 
     - name: Install Git 2.18.5
       if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
-      shell: bash
       run: |
         wget https://github.com/git/git/archive/refs/tags/v2.18.5.tar.gz
         tar xvf v2.18.5.tar.gz
@@ -63,14 +64,12 @@ jobs:
 
     - name: Checkout DuckDB to version
       if: ${{ matrix.duckdb_version != '<submodule_version>'}}
-      shell: bash
       run: |
         cd duckdb
         git checkout ${{ matrix.duckdb_version }}
 
       # Build extension
     - name: Build extension
-      shell: bash
       env:
         GEN: ninja
         STATIC_LIBCPP: 1
@@ -81,7 +80,6 @@ jobs:
 
     - name: Build extension
       if: ${{ matrix.arch != 'linux_arm64'}}
-      shell: bash
       run: |
         make test
 
@@ -92,7 +90,6 @@ jobs:
           build/release/extension/quack/quack.duckdb_extension
 
     - name: Deploy
-      shell: bash
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.S3_DEPLOY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DEPLOY_KEY }}

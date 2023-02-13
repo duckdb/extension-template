@@ -3,6 +3,9 @@ on: [push, pull_request,repository_dispatch]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
 
 jobs:
   macos-extensions:
@@ -12,6 +15,7 @@ jobs:
       matrix:
         # Add commits/tags to build against other DuckDB versions
         duckdb_version: [ '<submodule_version>' ]
+
     env:
       OSX_BUILD_UNIVERSAL: 1
       GEN: ninja
@@ -31,7 +35,6 @@ jobs:
 
       - name: Checkout DuckDB to version
         if: ${{ matrix.duckdb_version != '<submodule_version>'}}
-        shell: bash
         run: |
           cd duckdb
           git checkout ${{ matrix.duckdb_version }}
@@ -44,7 +47,6 @@ jobs:
           make test
 
       - name: Deploy
-        shell: bash
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.S3_DEPLOY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DEPLOY_KEY }}

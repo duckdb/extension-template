@@ -117,45 +117,43 @@ jobs:
         run: |
           make test
 
-    windows:
-      name: Windows Extensions (x64)
-      if: github.repository == 'duckdb/extension-template'
-      runs-on: windows-latest
-      strategy:
-        matrix:
-          # Add commits/tags to build against other DuckDB versions
-          duckdb_version: [ '<submodule_version>' ]
-      defaults:
-        run:
-          shell: bash
+  windows:
+    name: Windows Extensions (x64)
+    if: github.repository == 'duckdb/extension-template'
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        # Add commits/tags to build against other DuckDB versions
+        duckdb_version: [ '<submodule_version>' ]
+    defaults:
+      run:
+        shell: bash
 
-      steps:
-        - uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-            submodules: 'true'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: 'true'
 
-        - uses: actions/setup-python@v2
-          with:
-            python-version: '3.7'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
 
-        - name: Checkout DuckDB to version
-          # Add commits/tags to build against other DuckDB versions
-          if: ${{ matrix.duckdb_version != '<submodule_version>'}}
-          shell: bash
-          run: |
-            cd duckdb
-            git checkout ${{ matrix.duckdb_version }}
+      - name: Checkout DuckDB to version
+        # Add commits/tags to build against other DuckDB versions
+        if: ${{ matrix.duckdb_version != '<submodule_version>'}}
+        run: |
+          cd duckdb
+          git checkout ${{ matrix.duckdb_version }}
 
-        - name: Rename extension
-          run: |
-            python scripts/set_extension_name.py testext
+      - name: Rename extension
+        run: |
+          python scripts/set_extension_name.py testext
 
-        - name: Build
-          run: |
-            make
+      - name: Build
+        run: |
+          make
 
-        - name: Build extension
-          shell: bash
-          run: |
-            build/release/test/Release/unittest.exe
+      - name: Build extension
+        run: |
+          build/release/test/Release/unittest.exe
