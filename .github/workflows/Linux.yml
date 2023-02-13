@@ -11,8 +11,8 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        # empty string builds current submodule version, add commits/tags to build against other DuckDB versions
-        duckdb_version: [ '' ]
+        # Add commits/tags to build against other DuckDB versions
+        duckdb_version: [ '<submodule_version>' ]
         arch: ['linux_amd64', 'linux_arm64', 'linux_amd64_gcc4']
         include:
           - arch: 'linux_amd64'
@@ -34,12 +34,6 @@ jobs:
         add-apt-repository ppa:git-core/ppa
         apt-get update -y -qq
         apt-get install -y -qq ninja-build make gcc-multilib g++-multilib libssl-dev wget openjdk-8-jdk zip maven unixodbc-dev libc6-dev-i386 lib32readline6-dev libssl-dev libcurl4-gnutls-dev libexpat1-dev gettext unzip build-essential checkinstall libffi-dev curl libz-dev openssh-client
-
-#    - name: Install cross compiler
-#      shell: bash
-#      if: ${{ matrix.arch == 'linux_arm64' }}
-#      run: |
-#        apt-get install -y -qq gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
     - name: Install Git 2.18.5
       if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
@@ -68,7 +62,7 @@ jobs:
         aarch64_cross_compile: ${{ matrix.arch == 'linux_arm64' && 1 }}
 
     - name: Checkout DuckDB to version
-      if: ${{ matrix.duckdb_version != ''}}
+      if: ${{ matrix.duckdb_version != '<submodule_version>'}}
       shell: bash
       run: |
         cd duckdb
@@ -115,8 +109,8 @@ jobs:
           echo 'No key set, skipping'
         elif [[ "$GITHUB_REF" =~ ^(refs/tags/v.+)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
+          ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME true
         elif [[ "$GITHUB_REF" =~ ^(refs/heads/main)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
+          ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME true
         fi
