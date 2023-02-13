@@ -8,8 +8,8 @@ defaults:
     shell: bash
 
 jobs:
-  linux-extensions-64:
-    name: Linux Extensions
+  linux:
+    name: Linux Release
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     strategy:

@@ -8,8 +8,8 @@ defaults:
     shell: bash
 
 jobs:
-  macos-extensions:
-    name: OSX Extensions (Universal)
+  macos:
+    name: MacOS Release (Universal)
     runs-on: macos-latest
     strategy:
       matrix:
