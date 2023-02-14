@@ -53,9 +53,11 @@ jobs:
           cd duckdb
           git checkout ${{ matrix.duckdb_version }}
 
+      - uses: ./duckdb/.github/actions/ubuntu_16_setup
+
       - name: Rename extension
         run: |
-          python scripts/set_extension_name.py testext
+          python3 scripts/set_extension_name.py testext
 
       - name: Build
         run: |
@@ -99,11 +101,6 @@ jobs:
           cd duckdb
           git checkout ${{ matrix.duckdb_version }}
 
-      - name: Rename extension
-        run: |
-          python scripts/set_extension_name.py testext
-
-      # Build extension
       - name: Rename extension
         run: |
           python scripts/set_extension_name.py testext
