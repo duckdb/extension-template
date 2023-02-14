@@ -65,9 +65,8 @@ D select <extension_name_you_chose>('Jane') as result;
 └─────────────────────────────────────┘
 ```
 
-For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the in-tree 
-[extensions](https://github.com/duckdb/duckdb/tree/master/extension) (or in your `duckdb` submodule) and the 
-out-of-tree extensions in [duckdblabs](https://github.com/duckdblabs)! 
+For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the [test extensions](https://github.com/duckdb/duckdb/blob/master/test/extension),
+the [in-tree extensions](https://github.com/duckdb/duckdb/tree/master/extension), and the [out-of-tree extensions](https://github.com/duckdblabs).
 
 ## Distributing your extension
 Easy distribution of extensions built with this template is facilitated using a similar process used by DuckDB itself. 
