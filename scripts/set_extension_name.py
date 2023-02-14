@@ -10,10 +10,10 @@ string_to_find = "quack"
 string_to_replace = sys.argv[1]
 
 def replace(file_name, to_find, to_replace):
-    with open(file_name, 'r') as file :
+    with open(file_name, 'r', encoding="utf8") as file :
         filedata = file.read()
     filedata = filedata.replace(to_find, to_replace)
-    with open(file_name, 'w') as file:
+    with open(file_name, 'w', encoding="utf8") as file:
         file.write(filedata)
 
 files_to_search = []
