@@ -88,11 +88,9 @@ test_debug_python: debug_python
 test_release_python: release_python
 	cd test/python && python3 -m pytest
 
-# TODO make this clever
 format:
-	clang-format --sort-includes=0 -style=file -i src/quack_extension.cpp
+	find src/ -iname *.hpp -o -iname *.cpp | xargs clang-format --sort-includes=0 -style=file -i
 	cmake-format -i CMakeLists.txt
-	cmake-format -i src/CMakeLists.txt
 
 update:
 	git submodule update --remote --merge
