@@ -65,9 +65,8 @@ D select <extension_name_you_chose>('Jane') as result;
 └─────────────────────────────────────┘
 ```
 
-For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the in-tree 
-[extensions](https://github.com/duckdb/duckdb/tree/master/extension) (or in your `duckdb` submodule) and the 
-out-of-tree extensions in [duckdblabs](https://github.com/duckdblabs)! 
+For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the [test extensions](https://github.com/duckdb/duckdb/blob/master/test/extension),
+the [in-tree extensions](https://github.com/duckdb/duckdb/tree/master/extension), and the [out-of-tree extensions](https://github.com/duckdblabs).
 
 ## Distributing your extension
 Easy distribution of extensions built with this template is facilitated using a similar process used by DuckDB itself. 
@@ -107,17 +106,27 @@ db = new duckdb.Database(':memory:', {"allow_unsigned_extensions": "true"});
 Secondly, you will need to set the repository endpoint in DuckDB to the HTTP url of your bucket + version of the extension 
 you want to install. To do this run the following SQL query in DuckDB:
 ```sql
-SET custom_extension_repository='bucket.s3.eu-west-1.amazonaws.com/<your_extension_name>/v0.0.1';
+SET custom_extension_repository='bucket.s3.eu-west-1.amazonaws.com/<your_extension_name>/latest';
 ```
+Note that the `/latest` path will allow you to install the latest extension version available for your current version of 
+DuckDB. To specify a specific version, you can pass the version instead.
 
 After running these steps, you can install and load your extension using the regular INSTALL/LOAD commands in DuckDB:
 ```sql
 INSTALL <your_extension_name>
 LOAD <your_extension_name>
 ```
-Note: your DuckDB version should match up with the binaries you have distributed. Which versions this is, 
-depends on the commit you have pinned in your submodule and the extra versions you have specified in the GitHub actions 
-workflows.
+
+### Versioning of your extension
+Extension binaries will only work for the specific DuckDB version they were built for. Since you may want to support multiple 
+versions of DuckDB for a release of your extension, you can specify which versions to build for in the CI of this template.
+By default, the CI will build your extension against the version of the DuckDB submodule, which should generally be the most
+recent version of DuckDB. To build for multiple versions of DuckDB, simply add the version to the matrix variable, e.g.:
+```
+strategy:
+    matrix:
+        duckdb_version: [ '<submodule_version>', 'v0.7.0']
+```
 
 ## Setting up CLion 
 Configuring CLion with the extension template requires a little work. Firstly, make sure that the DuckDB submodule is available. 

@@ -3,16 +3,19 @@ on: [push, pull_request,repository_dispatch]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  linux-extensions-64:
-    name: Linux Extensions
+  linux:
+    name: Linux Release
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        # empty string builds current submodule version, add commits/tags to build against other DuckDB versions
-        duckdb_version: [ '' ]
+        # Add commits/tags to build against other DuckDB versions
+        duckdb_version: [ '<submodule_version>' ]
         arch: ['linux_amd64', 'linux_arm64', 'linux_amd64_gcc4']
         include:
           - arch: 'linux_amd64'
@@ -27,7 +30,6 @@ jobs:
     steps:
     - name: Install required ubuntu packages
       if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
-      shell: bash
       run: |
         apt-get update -y -qq
         apt-get install -y -qq software-properties-common
@@ -35,15 +37,8 @@ jobs:
         apt-get update -y -qq
         apt-get install -y -qq ninja-build make gcc-multilib g++-multilib libssl-dev wget openjdk-8-jdk zip maven unixodbc-dev libc6-dev-i386 lib32readline6-dev libssl-dev libcurl4-gnutls-dev libexpat1-dev gettext unzip build-essential checkinstall libffi-dev curl libz-dev openssh-client
 
-#    - name: Install cross compiler
-#      shell: bash
-#      if: ${{ matrix.arch == 'linux_arm64' }}
-#      run: |
-#        apt-get install -y -qq gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-
     - name: Install Git 2.18.5
       if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
-      shell: bash
       run: |
         wget https://github.com/git/git/archive/refs/tags/v2.18.5.tar.gz
         tar xvf v2.18.5.tar.gz
@@ -57,6 +52,12 @@ jobs:
         fetch-depth: 0
         submodules: 'true'
 
+    - name: Checkout DuckDB to version
+      if: ${{ matrix.duckdb_version != '<submodule_version>'}}
+      run: |
+        cd duckdb
+        git checkout ${{ matrix.duckdb_version }}
+
     - if: ${{ matrix.arch == 'linux_amd64_gcc4' }}
       uses: ./duckdb/.github/actions/centos_7_setup
       with:
@@ -67,16 +68,8 @@ jobs:
       with:
         aarch64_cross_compile: ${{ matrix.arch == 'linux_arm64' && 1 }}
 
-    - name: Checkout DuckDB to version
-      if: ${{ matrix.duckdb_version != ''}}
-      shell: bash
-      run: |
-        cd duckdb
-        git checkout ${{ matrix.duckdb_version }}
-
       # Build extension
     - name: Build extension
-      shell: bash
       env:
         GEN: ninja
         STATIC_LIBCPP: 1
@@ -87,7 +80,6 @@ jobs:
 
     - name: Build extension
       if: ${{ matrix.arch != 'linux_arm64'}}
-      shell: bash
       run: |
         make test
 
@@ -98,7 +90,6 @@ jobs:
           build/release/extension/quack/quack.duckdb_extension
 
     - name: Deploy
-      shell: bash
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.S3_DEPLOY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DEPLOY_KEY }}
@@ -115,8 +106,8 @@ jobs:
           echo 'No key set, skipping'
         elif [[ "$GITHUB_REF" =~ ^(refs/tags/v.+)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
+          ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME true
         elif [[ "$GITHUB_REF" =~ ^(refs/heads/main)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME
+          ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME false
         fi
