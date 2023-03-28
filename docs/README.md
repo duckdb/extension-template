@@ -1,5 +1,7 @@
 # WIP Disclaimer
-This template is currently work-in-progress. Feel free to play around with it and give us feedback. Note also that this template depends on a development version of DuckDB. Follow https://duckdb.org/news for more information on official launch.
+This template is currently work-in-progress. Feel free to play around with it and give us feedback. Note also that this template depends on a development version of DuckDB.
+
+Get in contact with fellow extension developers on https://discord.duckdb.org and follow https://duckdb.org/news for more information on official launch.
 
 # DuckDB Extension Template
 The main goal of this template is to allow users to easily develop, test and distribute their own DuckDB extension.
