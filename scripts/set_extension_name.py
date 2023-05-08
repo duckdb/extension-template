@@ -1,13 +1,15 @@
 #!/usr/bin/python3
 
-import sys, os
+import sys, os, shutil
 from pathlib import Path
 
-if (len(sys.argv) != 2):
-    raise Exception('usage: python3 set_extension_name.py <name_for_extension>')
+shutil.copyfile(f'docs/NEXT_README.md', f'README.md')
 
-string_to_find = "quack"
-string_to_replace = sys.argv[1]
+if (len(sys.argv) != 3):
+    raise Exception('usage: python3 set_extension_name.py <name_for_extension> <name_for_function>')
+
+name_extension = sys.argv[1]
+name_function = sys.argv[2]
 
 def replace(file_name, to_find, to_replace):
     with open(file_name, 'r', encoding="utf8") as file :
@@ -24,16 +26,24 @@ files_to_search.extend(Path('./test').rglob('./**/*.js'))
 files_to_search.extend(Path('./src').rglob('./**/*.hpp'))
 files_to_search.extend(Path('./src').rglob('./**/*.cpp'))
 files_to_search.extend(Path('./src').rglob('./**/*.txt'))
-files_to_search.extend(Path('./src').rglob('./**/*.md'))
-for path in files_to_search:
-    replace(path, string_to_find, string_to_replace)
-    replace(path, string_to_find.capitalize(), string_to_replace.capitalize())
+files_to_search.extend(Path('./src').rglob('./*.md'))
 
-replace("./CMakeLists.txt", string_to_find, string_to_replace)
-replace("./Makefile", string_to_find, string_to_replace)
-replace("./Makefile", string_to_find.capitalize(), string_to_replace.capitalize())
-replace("./Makefile", string_to_find.upper(), string_to_replace.upper())
-replace("./README.md", string_to_find, string_to_replace)
+def replace_everywhere(to_find, to_replace):
+    for path in files_to_search:
+        replace(path, to_find, to_replace)
+        replace(path, to_find.capitalize(), to_replace.capitalize())
+    
+    replace("./CMakeLists.txt", to_find, to_replace)
+    replace("./Makefile", to_find, to_replace)
+    replace("./Makefile", to_find.capitalize(), to_replace.capitalize())
+    replace("./Makefile", to_find.upper(), to_replace.upper())
+    replace("./README.md", to_find, to_replace)
+
+replace_everywhere("quack", name_function)
+replace_everywhere("<extension_name>", name_extension)
+
+string_to_replace = name_function
+string_to_find = "quack"
 
 # rename files
 os.rename(f'test/python/{string_to_find}_test.py', f'test/python/{string_to_replace}_test.py')
