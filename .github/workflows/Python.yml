@@ -12,33 +12,36 @@ defaults:
     shell: bash
 
 jobs:
-  python:
-    name: Python
-    runs-on: ubuntu-latest
-    env:
-      GEN: ninja
-
-    steps:
-      - name: Install Ninja
-        run: |
-          sudo apt-get update -y -qq
-          sudo apt-get install -y -qq ninja-build
-
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: 'true'
-
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-
-      - name: Build DuckDB Python client
-        run: make debug_python
-
-      - name: Install Python test dependencies
-        run: python -m pip install --upgrade pytest
-
-      - name: Run Python client tests
-        run: |
-          make test_debug_python
+# TODO: python inlined builds broken currently broken, to run your extension from python,
+#       use regular build to build the loadable extensions, then directly load extension binary from
+#       desired duckdb client
+#  python:
+#    name: Python
+#    runs-on: ubuntu-latest
+#    env:
+#      GEN: ninja
+#
+#    steps:
+#      - name: Install Ninja
+#        run: |
+#          sudo apt-get update -y -qq
+#          sudo apt-get install -y -qq ninja-build
+#
+#      - uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#          submodules: 'true'
+#
+#      - uses: actions/setup-python@v2
+#        with:
+#          python-version: '3.9'
+#
+#      - name: Build DuckDB Python client
+#        run: make debug_python
+#
+#      - name: Install Python test dependencies
+#        run: python -m pip install --upgrade pytest
+#
+#      - name: Run Python client tests
+#        run: |
+#          make test_debug_python
