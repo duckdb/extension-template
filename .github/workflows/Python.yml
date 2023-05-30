@@ -12,7 +12,12 @@ defaults:
     shell: bash
 
 jobs:
+
   python:
+    # TODO: python inlined builds broken currently broken, to run your extension from python,
+    #       use regular build to build the loadable extensions, then directly load extension binary from
+    #       desired duckdb client
+    if: false
     name: Python
     runs-on: ubuntu-latest
     env:
