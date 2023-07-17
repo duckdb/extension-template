@@ -9,16 +9,22 @@ defaults:
 
 jobs:
   macos:
-    name: MacOS Release (Universal)
+    name: MacOS Release (${{ matrix.osx_build_arch }})
     runs-on: macos-latest
     strategy:
       matrix:
         # Add commits/tags to build against other DuckDB versions
         duckdb_version: [ '<submodule_version>' ]
+        vcpkg_triplet: [ 'x64-osx', 'arm64-osx' ]
+        include:
+          - osx_build_arch: 'x86_64'
+            duckdb_arch: 'osx_amd64'
+          - osx_build_arch: 'arm64'
+            duckdb_arch: 'osx_arm64'
 
     env:
-      OSX_BUILD_UNIVERSAL: 1
-      GEN: ninja
+      OSX_BUILD_ARCH: ${{ matrix.osx_build_arch }}
+      GEN: Ninja
 
     steps:
       - uses: actions/checkout@v3
@@ -28,6 +34,11 @@ jobs:
 
       - name: Install Ninja
         run: brew install ninja
+
+      - name: Setup Ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+          key: ${{ github.job }}-${{ matrix.duckdb_version }}
 
       - uses: actions/setup-python@v2
         with:
@@ -39,12 +50,22 @@ jobs:
           cd duckdb
           git checkout ${{ matrix.duckdb_version }}
 
-         # Build extension
       - name: Build extension
         shell: bash
         run: |
           make release
+
+      - name: Test Extension
+        if: ${{ matrix.osx_build_arch == 'x86_64'}}
+        shell: bash
+        run: |
           make test
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: osx-${{ matrix.osx_build_arch }}-extension
+          path: |
+            build/release/extension/quack/quack.duckdb_extension
 
       - name: Deploy
         env:
@@ -52,22 +73,20 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DEPLOY_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.S3_REGION }}
           BUCKET_NAME: ${{ secrets.S3_BUCKET }}
+          DUCKDB_EXTENSION_SIGNING_PK: ${{ secrets.DUCKDB_EXTENSION_SIGNING_KEY }}
         run: |
+          git config --global --add safe.directory '*'
           cd duckdb
           git fetch --tags
           export DUCKDB_VERSION=`git tag --points-at HEAD`
-          echo $DUCKDB_VERSION
           export DUCKDB_VERSION=${DUCKDB_VERSION:=`git log -1 --format=%h`}
-          echo $DUCKDB_VERSION
           cd ..
           if [[ "$AWS_ACCESS_KEY_ID" == "" ]] ; then
             echo 'No key set, skipping'
           elif [[ "$GITHUB_REF" =~ ^(refs/tags/v.+)$ ]] ; then
-            python -m pip install awscli
-            ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION osx_amd64 $BUCKET_NAME true
-            ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION osx_arm64 $BUCKET_NAME true
+            python3 -m pip install pip awscli
+            ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.duckdb_arch}} $BUCKET_NAME true
           elif [[ "$GITHUB_REF" =~ ^(refs/heads/main)$ ]] ; then
-            python -m pip install awscli
-            ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION osx_amd64 $BUCKET_NAME false
-            ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION osx_arm64 $BUCKET_NAME false
+            python3 -m pip install pip awscli
+            ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.duckdb_arch}} $BUCKET_NAME false
           fi

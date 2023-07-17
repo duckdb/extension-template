@@ -17,15 +17,22 @@ jobs:
         # Add commits/tags to build against other DuckDB versions
         duckdb_version: [ '<submodule_version>' ]
         arch: ['linux_amd64', 'linux_arm64', 'linux_amd64_gcc4']
+        vcpkg_version: [ '2023.04.15' ]
         include:
-          - arch: 'linux_amd64'
-            container: 'ubuntu:16.04'
-          - arch: 'linux_arm64'
-            container: 'ubuntu:18.04'
           - arch: 'linux_amd64_gcc4'
             container: 'quay.io/pypa/manylinux2014_x86_64'
+            vcpkg_triplet: 'x64-linux'
+          - arch: 'linux_amd64'
+            container: 'ubuntu:18.04'
+            vcpkg_triplet: 'x64-linux'
+          - arch: 'linux_arm64'
+            container: 'ubuntu:18.04'
+            vcpkg_triplet: 'arm64-linux'
     env:
-      GEN: ninja
+      VCPKG_TARGET_TRIPLET: ${{ matrix.vcpkg_triplet }}
+      GEN: Ninja
+      VCPKG_TOOLCHAIN_PATH: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      AZURE_STORAGE_CONNECTION_STRING: 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;'
 
     steps:
     - name: Install required ubuntu packages
@@ -58,17 +65,17 @@ jobs:
         cd duckdb
         git checkout ${{ matrix.duckdb_version }}
 
-    - if: ${{ matrix.arch == 'linux_amd64_gcc4' }}
-      uses: ./duckdb/.github/actions/centos_7_setup
-      with:
-        openssl: 0
+    - name: Setup ManyLinux2014
+      if: ${{ matrix.arch == 'linux_amd64_gcc4' }}
+      run: |
+        ./duckdb/scripts/setup_manylinux2014.sh general aws-cli ccache ssh python_alias
 
-    - if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
-      uses: ./duckdb/.github/actions/ubuntu_16_setup
+    - name: Setup Ubuntu
+      if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
+      uses: ./duckdb/.github/actions/ubuntu_18_setup
       with:
-        aarch64_cross_compile: ${{ matrix.arch == 'linux_arm64' && 1 }}
+        aarch64_cross_compile: 1
 
-      # Build extension
     - name: Build extension
       env:
         GEN: ninja
@@ -78,7 +85,7 @@ jobs:
       run: |
         make release
 
-    - name: Build extension
+    - name: Test extension
       if: ${{ matrix.arch != 'linux_arm64'}}
       run: |
         make test
