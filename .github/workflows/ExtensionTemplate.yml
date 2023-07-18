@@ -53,7 +53,7 @@ jobs:
           cd duckdb
           git checkout ${{ matrix.duckdb_version }}
 
-      - uses: ./duckdb/.github/actions/ubuntu_16_setup
+      - uses: ./duckdb/.github/actions/ubuntu_18_setup
 
       - name: Rename extension
         run: |
