@@ -15,7 +15,7 @@ jobs:
       matrix:
         # Add commits/tags to build against other DuckDB versions
         duckdb_version: [ '<submodule_version>' ]
-        vcpkg_triplet: [ 'x64-osx', 'arm64-osx' ]
+        osx_build_arch: [ 'x86_64', 'arm64' ]
         include:
           - osx_build_arch: 'x86_64'
             duckdb_arch: 'osx_amd64'
