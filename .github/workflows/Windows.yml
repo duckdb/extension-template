@@ -15,6 +15,8 @@ jobs:
       matrix:
         # Add commits/tags to build against other DuckDB versions
         duckdb_version: [ '<submodule_version>' ]
+    env:
+      GEN: Ninja
 
     steps:
       - uses: actions/checkout@v3
@@ -36,11 +38,15 @@ jobs:
       - name: Build extension
         run: |
           make release
-          build/release/test/Release/unittest.exe
+
+      - name: Test Extension
+        shell: bash
+        run: |
+          build/release/test/Release/unittest.exe --test-dir . "[sql]"
 
       - uses: actions/upload-artifact@v2
         with:
-          name: linux-extensions-64-aarch64
+          name: windows-extension
           path: |
             build/release/extension/quack/quack.duckdb_extension
 
