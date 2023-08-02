@@ -5,6 +5,10 @@ on:
       extension_name:
         required: true
         type: string
+      duckdb_version:
+        required: false
+        type: string
+        default: '<submodule_version>'
 defaults:
   run:
     shell: bash
@@ -16,7 +20,6 @@ jobs:
     strategy:
       matrix:
         # Add commits/tags to build against other DuckDB versions
-        duckdb_version: [ '<submodule_version>' ]
         osx_build_arch: [ 'x86_64', 'arm64' ]
         include:
           - osx_build_arch: 'x86_64'
@@ -40,17 +43,17 @@ jobs:
       - name: Setup Ccache
         uses: hendrikmuhs/ccache-action@main
         with:
-          key: ${{ github.job }}-${{ matrix.duckdb_version }}
+          key: ${{ github.job }}-${{ inputs.duckdb_version }}
 
       - uses: actions/setup-python@v2
         with:
           python-version: '3.7'
 
       - name: Checkout DuckDB to version
-        if: ${{ matrix.duckdb_version != '<submodule_version>'}}
+        if: ${{ inputs.duckdb_version != '<submodule_version>'}}
         run: |
           cd duckdb
-          git checkout ${{ matrix.duckdb_version }}
+          git checkout ${{ inputs.duckdb_version }}
 
       - name: Build extension
         shell: bash

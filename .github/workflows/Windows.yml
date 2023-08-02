@@ -5,6 +5,10 @@ on:
       extension_name:
         required: true
         type: string
+      duckdb_version:
+        required: false
+        type: string
+        default: '<submodule_version>'
 defaults:
   run:
     shell: bash
@@ -13,10 +17,6 @@ jobs:
   windows:
     name: Release
     runs-on: windows-latest
-    strategy:
-      matrix:
-        # Add commits/tags to build against other DuckDB versions
-        duckdb_version: [ '<submodule_version>' ]
     env:
       GEN: Ninja
 
@@ -32,10 +32,10 @@ jobs:
 
       - name: Checkout DuckDB to version
         # Add commits/tags to build against other DuckDB versions
-        if: ${{ matrix.duckdb_version != '<submodule_version>'}}
+        if: ${{ inputs.duckdb_version != '<submodule_version>'}}
         run: |
           cd duckdb
-          git checkout ${{ matrix.duckdb_version }}
+          git checkout ${{ inputs.duckdb_version }}
 
       - name: Build extension
         run: |
