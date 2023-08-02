@@ -1,8 +1,27 @@
 name: Linux
-on: [push, pull_request,repository_dispatch]
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
-  cancel-in-progress: true
+on:
+  call_workflow:
+    inputs:
+      extension_name:
+        required: true
+        type: string
+      duckdb_version:
+        required: false
+        type: string
+        default: '<submodule_version>'
+      build_amd64:
+        required: false
+        type: boolean
+        default: true
+      build_amd64_gcc4:
+        required: false
+        type: boolean
+        default: true
+      build_arm64:
+        required: false
+        type: boolean
+        default: true
+
 defaults:
   run:
     shell: bash
@@ -14,8 +33,6 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        # Add commits/tags to build against other DuckDB versions
-        duckdb_version: [ '<submodule_version>' ]
         arch: ['linux_amd64', 'linux_arm64', 'linux_amd64_gcc4']
         include:
           - arch: 'linux_amd64_gcc4'
@@ -24,6 +41,11 @@ jobs:
             container: 'ubuntu:18.04'
           - arch: 'linux_arm64'
             container: 'ubuntu:18.04'
+        exclude:
+          - arch: ${{ inputs.build_amd64 && '' || 'linux_amd64' }}
+          - arch: ${{ inputs.build_amd64_gcc4 && '' || 'linux_amd64_gcc4' }}
+          - arch: ${{ inputs.build_arm64 && '' || 'linux_arm64' }}
+
     env:
       GEN: Ninja
 
@@ -53,10 +75,10 @@ jobs:
         submodules: 'true'
 
     - name: Checkout DuckDB to version
-      if: ${{ matrix.duckdb_version != '<submodule_version>'}}
+      if: ${{ inputs.duckdb_version != '<submodule_version>'}}
       run: |
         cd duckdb
-        git checkout ${{ matrix.duckdb_version }}
+        git checkout ${{ inputs.duckdb_version }}
 
     - name: Setup ManyLinux2014
       if: ${{ matrix.arch == 'linux_amd64_gcc4' }}
@@ -85,9 +107,9 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{matrix.arch}}-extensions
+        name: ${{ inputs.extension_name }}-extension-${{matrix.arch}}
         path: |
-          build/release/extension/quack/quack.duckdb_extension
+          build/release/extension/${{ inputs.extension_name }}/${{ inputs.extension_name }}.duckdb_extension
 
     - name: Deploy
       env:

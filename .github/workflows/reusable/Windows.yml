@@ -1,8 +1,6 @@
 name: Windows
-on: [push, pull_request,repository_dispatch]
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
-  cancel-in-progress: true
+on:
+  call_workflow:
 defaults:
   run:
     shell: bash
@@ -46,9 +44,9 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: windows-extension
+          name: ${{ inputs.extension_name }}-extension-windows
           path: |
-            build/release/extension/quack/quack.duckdb_extension
+            build/release/extension/${{ inputs.extension_name }}/${{ inputs.extension_name }}.duckdb_extension
 
       - name: Deploy
         env:
