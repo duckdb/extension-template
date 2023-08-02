@@ -1,6 +1,6 @@
 name: Linux
 on:
-  call_workflow:
+  workflow_call:
     inputs:
       extension_name:
         required: true

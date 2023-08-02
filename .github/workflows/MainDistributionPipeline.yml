@@ -7,7 +7,7 @@ concurrency:
 jobs:
   linux-distribution:
     needs: Linux
-    uses: ./.github/workflows/reusable/Linux.yml
+    uses: ./.github/workflows/Linux.yml
     with:
       extension-name: quack
       build_arm64: false
@@ -15,14 +15,14 @@ jobs:
 
   macos-distribution:
     needs: Linux
-    uses: ./.github/workflows/reusable/MacOS.yml
+    uses: ./.github/workflows/MacOS.yml
     with:
       extension-name: quack
       secrets: inherit
 
   windows-distribution:
     needs: Linux
-    uses: ./.github/workflows/reusable/Windows.yml
+    uses: ./.github/workflows/Windows.yml
     with:
       extension-name: quack
       secrets: inherit

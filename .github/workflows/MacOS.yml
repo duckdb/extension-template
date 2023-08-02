@@ -1,6 +1,6 @@
 name: MacOS
 on:
-  call_workflow:
+  workflow_call:
 defaults:
   run:
     shell: bash
