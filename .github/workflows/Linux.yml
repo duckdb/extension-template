@@ -42,9 +42,12 @@ jobs:
           - arch: 'linux_arm64'
             container: 'ubuntu:18.04'
         exclude:
-          - arch: ${{ inputs.build_amd64 && '' || 'linux_amd64' }}
-          - arch: ${{ inputs.build_amd64_gcc4 && '' || 'linux_amd64_gcc4' }}
-          - arch: ${{ inputs.build_arm64 && '' || 'linux_arm64' }}
+          - arch: 'linux_amd64_gcc4'
+            if: ${{ inputs.build_amd64_gcc4 == false}}
+          - arch: 'linux_amd64'
+            if: ${{ !inputs.build_amd64 == false}}
+          - arch: 'linux_arm64'
+            if: ${{ !inputs.build_arm64 == false}}
 
     env:
       GEN: Ninja
