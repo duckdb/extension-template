@@ -10,7 +10,6 @@ jobs:
     uses: ./.github/workflows/Linux.yml
     with:
       extension_name: quack
-      build_amd64: false
     secrets: inherit
 
   macos-distribution:

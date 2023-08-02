@@ -9,18 +9,6 @@ on:
         required: false
         type: string
         default: '<submodule_version>'
-      build_amd64:
-        required: false
-        type: boolean
-        default: true
-      build_amd64_gcc4:
-        required: false
-        type: boolean
-        default: true
-      build_arm64:
-        required: false
-        type: boolean
-        default: true
 
 defaults:
   run:
@@ -41,18 +29,11 @@ jobs:
             container: 'ubuntu:18.04'
           - arch: 'linux_arm64'
             container: 'ubuntu:18.04'
-        exclude:
-          - arch: 'linux_amd64_gcc4'
-            if: ${{ inputs.build_amd64_gcc4 == false}}
-          - arch: 'linux_amd64'
-            if: ${{ !inputs.build_amd64 == false}}
-          - arch: 'linux_arm64'
-            if: ${{ !inputs.build_arm64 == false}}
-
     env:
       GEN: Ninja
 
     steps:
+    # TODO add cancel specific builds based on https://stackoverflow.com/questions/60589373/how-to-force-to-exit-in-github-actions-step?
     - name: Install required ubuntu packages
       if: ${{ matrix.arch == 'linux_amd64' || matrix.arch == 'linux_arm64' }}
       run: |
