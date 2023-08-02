@@ -1,6 +1,10 @@
 name: Windows
 on:
   workflow_call:
+    inputs:
+      extension_name:
+        required: true
+        type: string
 defaults:
   run:
     shell: bash
