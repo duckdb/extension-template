@@ -8,21 +8,21 @@ concurrency:
 jobs:
   linux-distribution:
     name: Linux
-    uses: ./.github/workflows/Linux.yml
+    uses: samansmink/extension-workflows/.github/workflows/Linux.yml@main
     with:
       extension_name: quack
     secrets: inherit
 
   macos-distribution:
     name: MacOS
-    uses: ./.github/workflows/MacOS.yml
+    uses: samansmink/extension-workflows/.github/workflows/MacOS.yml@main
     with:
       extension_name: quack
     secrets: inherit
 
   windows-distribution:
     name: Windows
-    uses: ./.github/workflows/Windows.yml
+    uses: samansmink/extension-workflows/.github/workflows/Windows.yml@main
     with:
       extension_name: quack
     secrets: inherit
