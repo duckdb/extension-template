@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   windows:
-    name: Release (amd64)
+    name: Release
     runs-on: windows-latest
     strategy:
       matrix:
