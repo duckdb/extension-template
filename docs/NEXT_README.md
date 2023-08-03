@@ -8,7 +8,18 @@ This extension, <extension_name>, allow you to ... <extension_goal>.
 
 
 ## Building
-To build the extension:
+### Dependencies
+DuckDB extensions use VCPKG for dependency management. To demonstrate that, the example extension in the template links against
+OpenSSL. Enabling VCPKG is very simple: follow the [installation instructions](https://vcpkg.io/en/getting-started) and export the following variable:
+```shell
+export VCPKG_TOOLCHAIN_PATH=<path_to_your_vcpkg_installation>/scripts/buildsystems/vcpkg.cmake
+```
+Note: while using VCPKG for installation is recommended, the build will still work as long as
+CMake's `find_package` function is able to locate a compatible openssl version. Alternatively, feel free
+to remove the OpenSSL dependency completely to build the example extension without dependencies.
+
+### Build steps
+Now to build the extension, run:
 ```sh
 make
 ```
