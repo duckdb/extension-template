@@ -1,9 +1,13 @@
-#
-# NOTE: if python tests are unused, deleting this file or disabling the workflow on GitHub will speed up CI
-#
-
 name: Python
-on: [push, pull_request,repository_dispatch]
+on:
+  workflow_call:
+    inputs:
+      # The DuckDB version against which the extension is built
+      duckdb_version:
+        required: false
+        type: string
+        default: '<submodule_version>'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
@@ -12,12 +16,7 @@ defaults:
     shell: bash
 
 jobs:
-
   python:
-    # TODO: python inlined builds broken currently broken, to run your extension from python,
-    #       use regular build to build the loadable extensions, then directly load extension binary from
-    #       desired duckdb client
-    if: false
     name: Python
     runs-on: ubuntu-latest
     env:
@@ -33,6 +32,12 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'true'
+
+      - name: Checkout DuckDB to version
+        if: ${{ inputs.duckdb_version != '<submodule_version>'}}
+        run: |
+          cd duckdb
+          git checkout ${{ inputs.duckdb_version }}
 
       - uses: actions/setup-python@v2
         with:
