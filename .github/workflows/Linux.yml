@@ -80,7 +80,7 @@ jobs:
     - name: Setup ManyLinux2014
       if: ${{ matrix.duckdb_arch == 'linux_amd64_gcc4' }}
       run: |
-        ./duckdb/scripts/setup_manylinux2014.sh general aws-cli ccache ssh python_alias
+        ./duckdb/scripts/setup_manylinux2014.sh general aws-cli ccache ssh python_alias openssl
 
     - name: Setup Ubuntu
       if: ${{ matrix.duckdb_arch == 'linux_amd64' || matrix.duckdb_arch == 'linux_arm64' }}
