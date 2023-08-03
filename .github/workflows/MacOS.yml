@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   macos:
-    name: MacOS Release (${{ matrix.osx_build_arch }})
+    name: Release (${{ matrix.duckdb_arch }})
     runs-on: macos-latest
     strategy:
       matrix:

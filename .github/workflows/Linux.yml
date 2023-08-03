@@ -24,7 +24,7 @@ defaults:
 
 jobs:
   linux:
-    name: Linux Release
+    name: Release
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     strategy:

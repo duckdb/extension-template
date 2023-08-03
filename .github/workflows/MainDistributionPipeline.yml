@@ -7,18 +7,21 @@ concurrency:
 
 jobs:
   linux-distribution:
+    name: Linux
     uses: ./.github/workflows/Linux.yml
     with:
       extension_name: quack
     secrets: inherit
 
   macos-distribution:
+    name: MacOS
     uses: ./.github/workflows/MacOS.yml
     with:
       extension_name: quack
     secrets: inherit
 
   windows-distribution:
+    name: Windows
     uses: ./.github/workflows/Windows.yml
     with:
       extension_name: quack

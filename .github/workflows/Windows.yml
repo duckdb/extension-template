@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   windows:
-    name: Release
+    name: Release (amd64)
     runs-on: windows-latest
     env:
       GEN: Ninja
@@ -52,7 +52,7 @@ jobs:
       - name: Test Extension
         shell: bash
         run: |
-          build/release/test/Release/unittest.exe --test-dir . "[sql]"
+          make test
 
       - uses: actions/upload-artifact@v2
         with:

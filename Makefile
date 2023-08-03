@@ -5,6 +5,12 @@ all: release
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJ_DIR := $(dir $(MKFILE_PATH))
 
+ifeq ($(OS),Windows_NT)
+	TEST_PATH="/test/Release/unittest.exe"
+else
+	TEST_PATH="/test/unittest"
+endif
+
 OSX_BUILD_UNIVERSAL_FLAG=
 ifneq (${OSX_BUILD_ARCH}, "")
 	OSX_BUILD_UNIVERSAL_FLAG=-DOSX_BUILD_ARCH=${OSX_BUILD_ARCH}
@@ -74,10 +80,10 @@ release_python: release
 test: test_release
 
 test_release: release
-	./build/release/test/unittest "$(PROJ_DIR)test/*"
+	./build/release/$(TEST_PATH) "$(PROJ_DIR)test/*"
 
 test_debug: debug
-	./build/debug/test/unittest "$(PROJ_DIR)test/*"
+	./build/debug/$(TEST_PATH) "$(PROJ_DIR)test/*"
 
 # Client tests
 test_js: test_debug_js
