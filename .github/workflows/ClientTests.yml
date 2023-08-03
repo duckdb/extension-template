@@ -9,8 +9,8 @@ concurrency:
 jobs:
   python-tests:
     name: Python
-    uses: ./.github/workflows/NodeJS.yml
+    uses: ./.github/workflows/Python.yml
 
   node-tests:
     name: NodeJS
-    uses: ./.github/workflows/Python.yml
+    uses: ./.github/workflows/NodeJS.yml
