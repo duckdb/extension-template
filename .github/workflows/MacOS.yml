@@ -15,7 +15,7 @@ on:
       # Whether the extension is deployed to the specified s3 bucket
       release_s3:
         required: false
-        type: bool
+        type: boolean
         default: true
 defaults:
   run:
