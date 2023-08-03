@@ -25,6 +25,12 @@ jobs:
   windows:
     name: Release (amd64)
     runs-on: windows-latest
+    strategy:
+      matrix:
+        # Add commits/tags to build against other DuckDB versions
+        duckdb_arch: [ 'windows_amd64' ]
+        vcpkg_version: [ '2023.04.15' ]
+        vcpkg_triplet: [ 'x64-windows-static-md' ]
     env:
       GEN: Ninja
 
@@ -56,7 +62,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ inputs.extension_name }}-extension-windows
+          name: ${{ inputs.extension_name }}-extension-${{ matrix.duckdb_arch }}
           path: |
             build/release/extension/${{ inputs.extension_name }}/${{ inputs.extension_name }}.duckdb_extension
 
@@ -77,8 +83,8 @@ jobs:
             echo 'No key set, skipping'
           elif [[ "$GITHUB_REF" =~ ^(refs/tags/v.+)$ ]] ; then
             python -m pip install awscli
-            ./scripts/extension-upload.sh ${{ inputs.extension_name }} ${{ github.ref_name }} $DUCKDB_VERSION windows_amd64 $BUCKET_NAME true 
+            ./scripts/extension-upload.sh ${{ inputs.extension_name }} ${{ github.ref_name }} $DUCKDB_VERSION ${{ matrix.duckdb_arch }} $BUCKET_NAME true 
           elif [[ "$GITHUB_REF" =~ ^(refs/heads/main)$ ]] ; then
             python -m pip install awscli
-            ./scripts/extension-upload.sh ${{ inputs.extension_name }} `git log -1 --format=%h` $DUCKDB_VERSION windows_amd64 $BUCKET_NAME false 
+            ./scripts/extension-upload.sh ${{ inputs.extension_name }} `git log -1 --format=%h` $DUCKDB_VERSION ${{ matrix.duckdb_arch }} $BUCKET_NAME false 
           fi
