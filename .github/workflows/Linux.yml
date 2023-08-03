@@ -1,14 +1,22 @@
+# TODO: move to external repo
 name: Linux
 on:
   workflow_call:
     inputs:
+      # The name with which the extension will be built
       extension_name:
         required: true
         type: string
+      # The DuckDB version against which the extension is built
       duckdb_version:
         required: false
         type: string
         default: '<submodule_version>'
+      # Whether the extension is deployed to the specified s3 bucket
+      release_s3:
+        required: false
+        type: bool
+        default: true
 
 defaults:
   run:
@@ -112,8 +120,8 @@ jobs:
           echo 'No key set, skipping'
         elif [[ "$GITHUB_REF" =~ ^(refs/tags/v.+)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh quack ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME true
+          ./scripts/extension-upload.sh ${{ inputs.extension_name }} ${{ github.ref_name }} $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME true
         elif [[ "$GITHUB_REF" =~ ^(refs/heads/main)$ ]] ; then
           python3 -m pip install pip awscli
-          ./scripts/extension-upload.sh quack `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME false
+          ./scripts/extension-upload.sh ${{ inputs.extension_name }} `git log -1 --format=%h` $DUCKDB_VERSION ${{matrix.arch}} $BUCKET_NAME false
         fi
