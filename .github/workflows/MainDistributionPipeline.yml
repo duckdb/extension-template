@@ -29,6 +29,7 @@ jobs:
     secrets: inherit
 
   deploy:
+    needs: [ linux-build, macos-build, windows-build ]
     name: Deploy
     uses: ./.github/workflows/Deploy.yml
     with:
