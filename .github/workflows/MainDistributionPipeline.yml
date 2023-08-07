@@ -7,23 +7,30 @@ concurrency:
 
 # TODO: move workflows to official repo
 jobs:
-  linux-distribution:
+  linux-build:
     name: Linux
     uses: samansmink/extension-workflows/.github/workflows/Linux.yml@main
     with:
       extension_name: quack
     secrets: inherit
 
-  macos-distribution:
+  macos-build:
     name: MacOS
     uses: samansmink/extension-workflows/.github/workflows/MacOS.yml@main
     with:
       extension_name: quack
     secrets: inherit
 
-  windows-distribution:
+  windows-build:
     name: Windows
     uses: samansmink/extension-workflows/.github/workflows/Windows.yml@main
+    with:
+      extension_name: quack
+    secrets: inherit
+
+  deploy:
+    name: Deploy
+    uses: ./.github/workflows/Deploy.yml
     with:
       extension_name: quack
     secrets: inherit
