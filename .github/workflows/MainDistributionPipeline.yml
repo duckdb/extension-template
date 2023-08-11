@@ -1,5 +1,7 @@
 name: Main Extension Distribution Pipeline
 on: [push, pull_request, repository_dispatch]
+env:
+  EXTENSION_NAME: quack
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
@@ -11,27 +13,19 @@ jobs:
     name: Linux
     uses: samansmink/extension-workflows/.github/workflows/Linux.yml@main
     with:
-      extension_name: quack
+      extension_name: ${{ env.EXTENSION_NAME }}
     secrets: inherit
 
   macos-build:
     name: MacOS
     uses: samansmink/extension-workflows/.github/workflows/MacOS.yml@main
     with:
-      extension_name: quack
+      extension_name: ${{ env.EXTENSION_NAME }}
     secrets: inherit
 
   windows-build:
     name: Windows
     uses: samansmink/extension-workflows/.github/workflows/Windows.yml@main
     with:
-      extension_name: quack
-    secrets: inherit
-
-  deploy:
-    needs: [ linux-build, macos-build, windows-build ]
-    name: Deploy
-    uses: ./.github/workflows/Deploy.yml
-    with:
-      extension_name: quack
+      extension_name: ${{ env.EXTENSION_NAME }}
     secrets: inherit
