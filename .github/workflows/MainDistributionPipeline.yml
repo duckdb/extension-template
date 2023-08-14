@@ -8,21 +8,21 @@ concurrency:
 jobs:
   linux-build:
     name: Linux
-    uses: samansmink/extension-workflows/.github/workflows/Linux.yml@main
+    uses: samansmink/duckdb/.github/workflows/_extension_linux.yml@extension-workflows
     with:
       extension_name: quack
     secrets: inherit
 
   macos-build:
     name: MacOS
-    uses: samansmink/extension-workflows/.github/workflows/MacOS.yml@main
+    uses: samansmink/duckdb/.github/workflows/_extension_macos.yml@extension-workflows
     with:
       extension_name: quack
     secrets: inherit
 
   windows-build:
     name: Windows
-    uses: samansmink/extension-workflows/.github/workflows/Windows.yml@main
+    uses: samansmink/duckdb/.github/workflows/_extension_windows.yml@extension-workflows
     with:
       extension_name: quack
     secrets: inherit
