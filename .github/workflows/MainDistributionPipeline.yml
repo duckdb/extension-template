@@ -1,28 +1,24 @@
 name: Main Extension Distribution Pipeline
-on: [push, pull_request, repository_dispatch]
+on:
+  push:
+  pull_request:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      duckdb_version:
+        description: 'Version of DuckDB to build for'
+        required: false
+        type: string
+        default: extension-workflows
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
 
 jobs:
-  linux-build:
-    name: Linux
-    uses: samansmink/duckdb/.github/workflows/_extension_linux.yml@extension-workflows
-    with:
-      extension_name: quack
-    secrets: inherit
-
-  macos-build:
-    name: MacOS
-    uses: samansmink/duckdb/.github/workflows/_extension_macos.yml@extension-workflows
-    with:
-      extension_name: quack
-    secrets: inherit
-
-  windows-build:
-    name: Windows
-    uses: samansmink/duckdb/.github/workflows/_extension_windows.yml@extension-workflows
+  main-pipeline:
+    name: Main Pipeline
+    uses: samansmink/duckdb/.github/workflows/_extension_distribution.yml@${{inputs.duckdb_version}}
     with:
       extension_name: quack
     secrets: inherit
