@@ -10,10 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  duckdb:
-    name: DuckDB ${{ input.duckdb_version }}
-    uses: samansmink/duckdb-extension-workflows/.github/workflows/_extension_distribution.yml@main
+  duckdb-main-pipeline:
+    name: DuckDB Main Pipeline
+    uses: samansmink/extension-workflows/.github/workflows/_extension_distribution.yml@main
     with:
-      duckdb_version: ${{ input.duckdb_version }}
       extension_name: quack
     secrets: inherit
