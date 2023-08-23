@@ -67,8 +67,8 @@ D select <extension_name_you_chose>('Jane') as result;
 └─────────────────────────────────────┘
 ```
 
-For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the [test extensions](https://github.com/duckdb/duckdb/blob/master/test/extension),
-the [in-tree extensions](https://github.com/duckdb/duckdb/tree/master/extension), and the [out-of-tree extensions](https://github.com/duckdblabs).
+For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the [test extensions](https://github.com/duckdb/duckdb/blob/main/test/extension),
+the [in-tree extensions](https://github.com/duckdb/duckdb/tree/main/extension), and the [out-of-tree extensions](https://github.com/duckdblabs).
 
 ## Distributing your extension
 Easy distribution of extensions built with this template is facilitated using a similar process used by DuckDB itself. 
@@ -83,7 +83,7 @@ This step requires that you pass the following 4 parameters to your GitHub repo 
 | S3_DEPLOY_ID  | the S3 key id                       |
 | S3_DEPLOY_KEY | the S3 key secret                   |
 
-After setting these variables, all pushes to master will trigger a new (dev) release. Note that your AWS token should
+After setting these variables, all pushes to main will trigger a new (dev) release. Note that your AWS token should
 have full permissions to the bucket, and you will need to have ACLs enabled.
 
 ### Installing the deployed binaries
