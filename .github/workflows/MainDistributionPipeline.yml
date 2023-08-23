@@ -1,24 +1,19 @@
+# This workflow calls the main distribution pipeline from DuckDB to build, test and (optionally) release the extension
 name: Main Extension Distribution Pipeline
 on:
   push:
   pull_request:
-  repository_dispatch:
   workflow_dispatch:
-    inputs:
-      duckdb_version:
-        description: 'Version of DuckDB to build for'
-        required: false
-        type: string
-        default: extension-workflows
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
 
 jobs:
-  main-pipeline:
-    name: Main Pipeline
-    uses: samansmink/duckdb/.github/workflows/_extension_distribution.yml@${{inputs.duckdb_version}}
+  duckdb:
+    name: DuckDB ${{ input.duckdb_version }}
+    uses: samansmink/duckdb-extension-workflows/.github/workflows/_extension_distribution.yml@main
     with:
+      duckdb_version: ${{ input.duckdb_version }}
       extension_name: quack
     secrets: inherit
