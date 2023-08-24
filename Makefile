@@ -32,12 +32,13 @@ ifeq ($(GEN),ninja)
 endif
 
 #### Configuration for this extension
+EXTENSION_NAME=QUACK
 EXTENSION_FLAGS=\
 -DDUCKDB_EXTENSION_NAMES="quack" \
--DDUCKDB_EXTENSION_QUACK_PATH="$(PROJ_DIR)" \
--DDUCKDB_EXTENSION_QUACK_LOAD_TESTS=1 \
--DDUCKDB_EXTENSION_QUACK_INCLUDE_PATH="$(PROJ_DIR)src/include" \
--DDUCKDB_EXTENSION_QUACK_TEST_PATH="$(PROJ_DIR)test/sql"
+-DDUCKDB_EXTENSION_${EXTENSION_NAME}_PATH="$(PROJ_DIR)" \
+-DDUCKDB_EXTENSION_${EXTENSION_NAME}_LOAD_TESTS=1 \
+-DDUCKDB_EXTENSION_${EXTENSION_NAME}_INCLUDE_PATH="$(PROJ_DIR)src/include" \
+-DDUCKDB_EXTENSION_${EXTENSION_NAME}_TEST_PATH="$(PROJ_DIR)test/sql"
 
 #### Add more of the DuckDB in-tree extensions here that you need (also feel free to remove them when not needed)
 EXTRA_EXTENSIONS_FLAG=-DBUILD_EXTENSIONS="tpch;visualizer"
@@ -47,7 +48,7 @@ CLIENT_FLAGS:=
 
 #### Main build
 # For regular CLI build, we link the quack extension directly into the DuckDB executable
-CLIENT_FLAGS=-DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=1
+CLIENT_FLAGS=-DDUCKDB_EXTENSION_${EXTENSION_NAME}_SHOULD_LINK=1
 
 debug:
 	mkdir -p  build/debug && \
@@ -60,8 +61,8 @@ release:
 	cmake --build build/release --config Release
 
 ##### Client build
-JS_BUILD_FLAGS=-DBUILD_NODE=1 -DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=0
-PY_BUILD_FLAGS=-DBUILD_PYTHON=1 -DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=0
+JS_BUILD_FLAGS=-DBUILD_NODE=1 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_SHOULD_LINK=0
+PY_BUILD_FLAGS=-DBUILD_PYTHON=1 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_SHOULD_LINK=0
 
 debug_js: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
 debug_js: debug
@@ -84,14 +85,14 @@ DEBUG_EXT_PATH='$(PROJ_DIR)build/debug/extension/quack/quack.duckdb_extension'
 RELEASE_EXT_PATH='$(PROJ_DIR)build/release/extension/quack/quack.duckdb_extension'
 test_js: test_debug_js
 test_debug_js: debug_js
-	cd duckdb/tools/nodejs && QUACK_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
+	cd duckdb/tools/nodejs && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
 test_release_js: release_js
-	cd duckdb/tools/nodejs && QUACK_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
+	cd duckdb/tools/nodejs && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
 test_python: test_debug_python
 test_debug_python: debug_python
-	cd test/python && QUACK_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) python3 -m pytest
+	cd test/python && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) python3 -m pytest
 test_release_python: release_python
-	cd test/python && QUACK_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) python3 -m pytest
+	cd test/python && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) python3 -m pytest
 
 #### Misc
 format:
