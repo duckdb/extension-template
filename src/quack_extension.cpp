@@ -34,11 +34,14 @@ inline void QuackOpenSSLVersionScalarFun(DataChunk &args, ExpressionState &state
 }
 
 static void LoadInternal(DatabaseInstance &instance) {
+    // Register a scalar function
     auto quack_scalar_function = ScalarFunction("quack", {LogicalType::VARCHAR},
-        LogicalType::VARCHAR, QuackScalarFun);
+    ExtensionUtil::RegisterFunction(instance, quack_scalar_function);
+
+    // Register another scalar function
+    LogicalType::VARCHAR, QuackScalarFun);
     auto quack_openssl_version_scalar_function = ScalarFunction("quack_openssl_version", {LogicalType::VARCHAR},
                                                 LogicalType::VARCHAR, QuackOpenSSLVersionScalarFun);
-    ExtensionUtil::RegisterFunction(instance, quack_scalar_function);
     ExtensionUtil::RegisterFunction(instance, quack_openssl_version_scalar_function);
 }
 
