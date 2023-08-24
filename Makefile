@@ -11,13 +11,13 @@ else
 	TEST_PATH="/test/unittest"
 endif
 
-# OSX config
+#### OSX config
 OSX_BUILD_FLAG=
 ifneq (${OSX_BUILD_ARCH}, "")
 	OSX_BUILD_FLAG=-DOSX_BUILD_ARCH=${OSX_BUILD_ARCH}
 endif
 
-# VCPKG config
+#### VCPKG config
 VCPKG_TOOLCHAIN_PATH?=
 ifneq ("${VCPKG_TOOLCHAIN_PATH}", "")
 	TOOLCHAIN_FLAGS:=${TOOLCHAIN_FLAGS} -DVCPKG_MANIFEST_DIR='${PROJ_DIR}' -DVCPKG_BUILD=1 -DCMAKE_TOOLCHAIN_FILE='${VCPKG_TOOLCHAIN_PATH}'
@@ -26,51 +26,50 @@ ifneq ("${VCPKG_TARGET_TRIPLET}", "")
 	TOOLCHAIN_FLAGS:=${TOOLCHAIN_FLAGS} -DVCPKG_TARGET_TRIPLET='${VCPKG_TARGET_TRIPLET}'
 endif
 
+#### Enable Ninja as generator
 ifeq ($(GEN),ninja)
-	GENERATOR=-G "Ninja"
-	FORCE_COLOR=-DFORCE_COLORED_OUTPUT=1
+	GENERATOR=-G "Ninja" -DFORCE_COLORED_OUTPUT=1
 endif
 
-BUILD_FLAGS=-DEXTENSION_STATIC_BUILD=1 -DBUILD_EXTENSIONS="tpch" ${OSX_BUILD_FLAG} ${STATIC_LIBCPP} ${TOOLCHAIN_FLAGS}
-CLIENT_FLAGS :=
-
-# These flags will make DuckDB build the extension
+#### Configuration for this extension
 EXTENSION_FLAGS=\
 -DDUCKDB_EXTENSION_NAMES="quack" \
 -DDUCKDB_EXTENSION_QUACK_PATH="$(PROJ_DIR)" \
--DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=1 \
 -DDUCKDB_EXTENSION_QUACK_LOAD_TESTS=1 \
 -DDUCKDB_EXTENSION_QUACK_INCLUDE_PATH="$(PROJ_DIR)src/include" \
 -DDUCKDB_EXTENSION_QUACK_TEST_PATH="$(PROJ_DIR)test/sql"
 
-pull:
-	git submodule init
-	git submodule update --recursive --remote
+#### Add more of the DuckDB in-tree extensions here that you need (also feel free to remove them when not needed)
+EXTRA_EXTENSIONS_FLAG=-DBUILD_EXTENSIONS="tpch;visualizer"
 
-clean:
-	rm -rf build
-	rm -rf testext
-	cd duckdb && make clean
+BUILD_FLAGS=-DEXTENSION_STATIC_BUILD=1 $(EXTENSION_FLAGS) ${EXTRA_EXTENSIONS_FLAG} $(OSX_BUILD_FLAG) $(TOOLCHAIN_FLAGS)
+CLIENT_FLAGS:=
 
-# Main build
+#### Main build
+# For regular CLI build, we link the quack extension directly into the DuckDB executable
+CLIENT_FLAGS=-DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=1
+
 debug:
 	mkdir -p  build/debug && \
-	cmake $(GENERATOR) $(FORCE_COLOR) $(EXTENSION_FLAGS) ${CLIENT_FLAGS} -DEXTENSION_STATIC_BUILD=1 -DCMAKE_BUILD_TYPE=Debug ${BUILD_FLAGS} -S ./duckdb/ -B build/debug && \
+	cmake $(GENERATOR) $(BUILD_FLAGS) $(CLIENT_FLAGS) -DCMAKE_BUILD_TYPE=Debug -S ./duckdb/ -B build/debug && \
 	cmake --build build/debug --config Debug
 
 release:
 	mkdir -p build/release && \
-	cmake $(GENERATOR) $(FORCE_COLOR) $(EXTENSION_FLAGS) ${CLIENT_FLAGS} -DEXTENSION_STATIC_BUILD=1 -DCMAKE_BUILD_TYPE=Release ${BUILD_FLAGS} -S ./duckdb/ -B build/release && \
+	cmake $(GENERATOR) $(BUILD_FLAGS)  $(CLIENT_FLAGS)  -DCMAKE_BUILD_TYPE=Release -S ./duckdb/ -B build/release && \
 	cmake --build build/release --config Release
 
-# Client build
-debug_js: CLIENT_FLAGS=-DBUILD_NODE=1
+##### Client build
+JS_BUILD_FLAGS=-DBUILD_NODE=1 -DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=0
+PY_BUILD_FLAGS=-DBUILD_PYTHON=1 -DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=0
+
+debug_js: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
 debug_js: debug
-debug_python: CLIENT_FLAGS=-DBUILD_PYTHON=1
+debug_python: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
 debug_python: debug
-release_js: CLIENT_FLAGS=-DBUILD_NODE=1
+release_js: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
 release_js: release
-release_python: CLIENT_FLAGS=-DBUILD_PYTHON=1
+release_python: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
 release_python: release
 
 # Main tests
@@ -80,9 +79,9 @@ test_release: release
 test_debug: debug
 	./build/debug/$(TEST_PATH) "$(PROJ_DIR)test/*"
 
-# Client tests
+#### Client tests
 DEBUG_EXT_PATH='$(PROJ_DIR)build/debug/extension/quack/quack.duckdb_extension'
-RELEASE_EXT_PATH='$(PROJ_DIR)build/debug/extension/quack/quack.duckdb_extension'
+RELEASE_EXT_PATH='$(PROJ_DIR)build/release/extension/quack/quack.duckdb_extension'
 test_js: test_debug_js
 test_debug_js: debug_js
 	cd duckdb/tools/nodejs && QUACK_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
@@ -94,9 +93,17 @@ test_debug_python: debug_python
 test_release_python: release_python
 	cd test/python && QUACK_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) python3 -m pytest
 
+#### Misc
 format:
 	find src/ -iname *.hpp -o -iname *.cpp | xargs clang-format --sort-includes=0 -style=file -i
 	cmake-format -i CMakeLists.txt
-
 update:
 	git submodule update --remote --merge
+pull:
+	git submodule init
+	git submodule update --recursive --remote
+
+clean:
+	rm -rf build
+	rm -rf testext
+	cd duckdb && make clean

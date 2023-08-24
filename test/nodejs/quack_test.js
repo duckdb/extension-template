@@ -24,7 +24,6 @@ describe(`quack extension`, () => {
     it('quack_openssl_version function should return expected string', function (done) {
         db.all("SELECT quack_openssl_version('Michael') as value;", function (err, res) {
             if (err) throw err;
-            console.log(res)
             assert(res[0].value.startsWith('Quack Michael, my linked OpenSSL version is OpenSSL'));
             done();
         });

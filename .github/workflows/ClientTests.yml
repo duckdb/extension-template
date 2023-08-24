@@ -1,3 +1,8 @@
+#
+# This workflow runs (some of) the client test for the DuckDB extension. These should only be used when necessary, writing
+# regular SQL tests is generally preferable. Feel free to remove this workflow for your extension.
+#
+
 name: Client specific tests
 on: [push, pull_request, repository_dispatch]
 
@@ -5,7 +10,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
   cancel-in-progress: true
 
-# TODO: move workflows to official repo
 jobs:
   python-tests:
     name: Python

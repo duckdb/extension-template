@@ -1,5 +1,5 @@
 #
-# NOTE: this workflow is for testing the extension template itself, feel free to delete this file in your own repo.
+# NOTE: this workflow is for testing the extension template itself, this workflow should be removed in your extension
 #
 
 name: Extension Template
