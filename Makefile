@@ -65,11 +65,11 @@ PY_BUILD_FLAGS=-DBUILD_PYTHON=1 -DDUCKDB_EXTENSION_QUACK_SHOULD_LINK=0
 
 debug_js: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
 debug_js: debug
-debug_python: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
+debug_python: CLIENT_FLAGS=$(PY_BUILD_FLAGS)
 debug_python: debug
 release_js: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
 release_js: release
-release_python: CLIENT_FLAGS=$(JS_BUILD_FLAGS)
+release_python: CLIENT_FLAGS=$(PY_BUILD_FLAGS)
 release_python: release
 
 # Main tests
