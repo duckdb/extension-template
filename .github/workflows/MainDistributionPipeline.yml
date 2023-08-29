@@ -14,7 +14,9 @@ concurrency:
 jobs:
   duckdb-main-pipeline:
     name: DuckDB Main Pipeline
-    uses: samansmink/extension-workflows/.github/workflows/_extension_distribution.yml@main
+    uses: samansmink/duckdb/.github/workflows/_extension_distribution.yml@extension-workflows-2
     with:
+      duckdb_version: 6855f749756c073bbb5a7abf4109580d45465c45
       extension_name: quack
+      extension_ref: ${{ github.ref_name }}
     secrets: inherit

@@ -11,10 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  python-tests:
-    name: Python
-    uses: samansmink/extension-workflows/.github/workflows/Python.yml@main
-
-  node-tests:
-    name: NodeJS
-    uses: samansmink/extension-workflows/.github/workflows/NodeJS.yml@main
+  client-tests:
+    name: Client Tests
+    uses: samansmink/duckdb/.github/workflows/_extension_client_tests.yml@extension-workflows-2
+    with:
+      duckdb_version: 6855f749756c073bbb5a7abf4109580d45465c45
