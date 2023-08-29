@@ -15,4 +15,4 @@ jobs:
     name: Client Tests
     uses: samansmink/duckdb/.github/workflows/_extension_client_tests.yml@extension-workflows-2
     with:
-      duckdb_version: 6855f749756c073bbb5a7abf4109580d45465c45
+      duckdb_version: 6855f74975

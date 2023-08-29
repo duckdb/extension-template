@@ -16,7 +16,10 @@ jobs:
     name: DuckDB Main Pipeline
     uses: samansmink/duckdb/.github/workflows/_extension_distribution.yml@extension-workflows-2
     with:
-      duckdb_version: 6855f749756c073bbb5a7abf4109580d45465c45
+      duckdb_version: 6855f74975
       extension_name: quack
       extension_ref: ${{ github.ref_name }}
+    # Secrets are used to pass S3 credentials to the extension-upload script for distributing.
+    # Note that for security, switching to either explicitly passing secrets or moving the workflow into the extension
+    # repository can be considered.
     secrets: inherit
