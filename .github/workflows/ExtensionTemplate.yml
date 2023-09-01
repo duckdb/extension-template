@@ -1,5 +1,5 @@
 #
-# NOTE: this workflow is for testing the extension template itself, feel free to delete this file in your own repo.
+# NOTE: this workflow is for testing the extension template itself, this workflow should be removed in your extension
 #
 
 name: Extension Template
@@ -13,7 +13,7 @@ jobs:
     name: Linux Extensions
     if: ${{ vars.RUN_RENAME_TEST == 'true' }}
     runs-on: ubuntu-latest
-    container: ubuntu:16.04
+    container: ubuntu:18.04
     strategy:
       matrix:
         # Add commits/tags to build against other DuckDB versions

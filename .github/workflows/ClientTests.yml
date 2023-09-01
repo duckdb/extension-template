@@ -1,0 +1,18 @@
+#
+# This workflow runs (some of) the client test for the DuckDB extension. These should only be used when necessary, writing
+# regular SQL tests is generally preferable. Feel free to remove this workflow for your extension.
+#
+
+name: Client specific tests
+on: [push, pull_request, repository_dispatch]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  client-tests:
+    name: Client Tests
+    uses: duckdb/duckdb/.github/workflows/_extension_client_tests.yml@26931f7ac687e8323c24e7f7b1e081114400d1b3
+    with:
+      duckdb_version: 26931f7ac6

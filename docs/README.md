@@ -14,7 +14,18 @@ git clone --recurse-submodules https://github.com/<you>/<your-new-extension-repo
 Note that `--recurse-submodules` will ensure the correct version of duckdb is pulled allowing you to get started right away.
 
 ## Building
-To build the extension:
+### Dependencies
+DuckDB extensions use VCPKG for dependency management. To demonstrate that, the example extension in the template links against
+OpenSSL. Enabling VCPKG is very simple: follow the [installation instructions](https://vcpkg.io/en/getting-started) and export the following variable:
+```shell
+export VCPKG_TOOLCHAIN_PATH=<path_to_your_vcpkg_installation>/scripts/buildsystems/vcpkg.cmake
+```
+Note: while using VCPKG for installation is recommended, the build will still work as long as 
+CMake's `find_package` function is able to locate a compatible openssl version. Alternatively, feel free 
+to remove the OpenSSL dependency completely to build the example extension without dependencies.
+
+### Build steps
+Now to build the extension, run:
 ```sh
 make
 ```
@@ -138,6 +149,6 @@ Then make sure to open `./duckdb/CMakeLists.txt` (so not the top level `CMakeLis
 Now to fix your project path go to `tools->CMake->Change Project Root`([docs](https://www.jetbrains.com/help/clion/change-project-root-directory.html)) to set the project root to the root dir of this repo.
 
 ### Debugging
-To set up debugging in CLion, there are two simple steps required. Firstly, in `CLion -> Settings / Preferences -> Build, Execution, Deploy -> CMake` you will need to add the desired builds (e.g. Debug, Release, RelDebug, etc). There's different ways to configure this, but the easiest is to leave all empty, except the `build path`, which needs to be set to `../build/{build type}`. Now on a clean repository you will first need to run `make {build type}` to initialize the CMake build directory. After running make, you will be able to (re)build from CLion by using the build target we just created.
+To set up debugging in CLion, there are two simple steps required. Firstly, in `CLion -> Settings / Preferences -> Build, Execution, Deploy -> CMake` you will need to add the desired builds (e.g. Debug, Release, RelDebug, etc). There's different ways to configure this, but the easiest is to leave all empty, except the `build path`, which needs to be set to `../build/{build type}`. Now on a clean repository you will first need to run `make {build type}` to initialize the CMake build directory. After running make, you will be able to (re)build from CLion by using the build target we just created. If you use the CLion editor, you can create a CLion CMake profiles matching the CMake variables that are described in the makefile, and then you don't need to invoke the Makefile.
 
 The second step is to configure the unittest runner as a run/debug configuration. To do this, go to `Run -> Edit Configurations` and click `+ -> Cmake Application`. The target and executable should be `unittest`. This will run all the DuckDB tests. To specify only running the extension specific tests, add `--test-dir ../../.. [sql]` to the `Program Arguments`. Note that it is recommended to use the `unittest` executable for testing/development within CLion. The actual DuckDB CLI currently does not reliably work as a run target in CLion.

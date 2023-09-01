@@ -1,0 +1,25 @@
+#
+# This workflow calls the main distribution pipeline from DuckDB to build, test and (optionally) release the extension
+#
+name: Main Extension Distribution Pipeline
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  duckdb-main-pipeline:
+    name: DuckDB Main Pipeline
+    uses: duckdb/duckdb/.github/workflows/_extension_distribution.yml@26931f7ac687e8323c24e7f7b1e081114400d1b3
+    with:
+      duckdb_version: 26931f7ac6
+      extension_name: quack
+      extension_ref: ${{ github.ref_name }}
+    # Secrets are used to pass S3 credentials to the extension-upload script for distributing.
+    # Note that for security, switching to either explicitly passing secrets or moving the workflow into the extension
+    # repository can be considered.
+    secrets: inherit
