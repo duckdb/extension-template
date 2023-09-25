@@ -108,3 +108,4 @@ clean:
 	rm -rf build
 	rm -rf testext
 	cd duckdb && make clean
+	cd duckdb && make clean-python
