@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   linux:
-    name: Linux Extensions
+    name: Linux
     if: ${{ vars.RUN_RENAME_TEST == 'true' }}
     runs-on: ubuntu-latest
     container: ubuntu:18.04
@@ -128,7 +128,7 @@ jobs:
           make test
 
   windows:
-    name: Windows Extensions (x64)
+    name: Windows
     if: ${{ vars.RUN_RENAME_TEST == 'true' }}
     runs-on: windows-latest
     strategy:
@@ -172,6 +172,6 @@ jobs:
         run: |
           make
 
-      - name: Build extension
+      - name: Test extension
         run: |
           build/release/test/Release/unittest.exe
