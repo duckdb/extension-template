@@ -1,5 +1,6 @@
 #
-# NOTE: this workflow is for testing the extension template itself, this workflow should be removed in your extension
+# NOTE: this workflow is for testing the extension template itself,
+#     this workflow will be removed when scripts/set_extension_name.py is run
 #
 
 name: Extension Template
