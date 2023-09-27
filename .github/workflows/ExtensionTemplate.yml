@@ -1,7 +1,6 @@
 #
 # NOTE: this workflow is for testing the extension template itself, this workflow should be removed in your extension
 #
-
 name: Extension Template
 on: [push, pull_request,repository_dispatch]
 concurrency:
