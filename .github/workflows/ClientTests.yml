@@ -13,6 +13,6 @@ concurrency:
 jobs:
   client-tests:
     name: Client Tests
-    uses: duckdb/duckdb/.github/workflows/_extension_client_tests.yml@0d84ccf478578278b2d1168675b8b93c60f78a5e
+    uses: duckdb/duckdb/.github/workflows/_extension_client_tests.yml@v0.9.0
     with:
-      duckdb_version: 0d84ccf478
+      duckdb_version: v0.9.0
