@@ -11,6 +11,9 @@ if (len(sys.argv) != 3):
 name_extension = sys.argv[1]
 name_function = sys.argv[2]
 
+if ('_' in name_extension or name_extension[0].islower()):
+    raise Exception('Currently only extension names in CamelCase are allowed')
+
 def replace(file_name, to_find, to_replace):
     with open(file_name, 'r', encoding="utf8") as file :
         filedata = file.read()

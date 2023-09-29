@@ -62,7 +62,7 @@ make test
 ## Getting started with your own extension
 After creating a repository from this template, the first step is to name your extension. To rename the extension, run:
 ```
-python3 ./scripts/set_extension_name.py <extension_name_you_want>
+python3 ./scripts/set_extension_name.py <name_for_extension> <name_for_function>
 ```
 Feel free to delete the script after this step.
 
