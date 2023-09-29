@@ -34,13 +34,14 @@ files_to_search.extend(Path('./src').rglob('./*.md'))
 def replace_everywhere(to_find, to_replace):
     for path in files_to_search:
         replace(path, to_find, to_replace)
-        replace(path, to_find.capitalize(), to_replace.capitalize())
+        replace(path, to_find[0].upper() + to_find[1:], to_replace[0].upper() + to_replace[1:])
     
     replace("./CMakeLists.txt", to_find, to_replace)
     replace("./Makefile", to_find, to_replace)
-    replace("./Makefile", to_find.capitalize(), to_replace.capitalize())
+    replace("./Makefile", to_find[0].upper() + to_find[1:], to_replace[0].upper() + to_replace[1:])
     replace("./Makefile", to_find.upper(), to_replace.upper())
     replace("./README.md", to_find, to_replace)
+
 
 replace_everywhere("quack", name_function)
 replace_everywhere("<extension_name>", name_extension)
