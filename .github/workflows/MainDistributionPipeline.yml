@@ -27,5 +27,5 @@ jobs:
     with:
       duckdb_version: main
       extension_name: quack
-      deploy_latest: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature' }}
-      deploy_versioned: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature' }}
+      deploy_latest: true
+      deploy_versioned: true
