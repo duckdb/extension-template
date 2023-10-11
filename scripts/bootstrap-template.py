@@ -6,7 +6,7 @@ from pathlib import Path
 shutil.copyfile(f'docs/NEXT_README.md', f'README.md')
 
 if (len(sys.argv) != 2):
-    raise Exception('usage: python3 set_extension_name.py <name_for_extension_in_snake_case>')
+    raise Exception('usage: python3 bootstrap-template.py <name_for_extension_in_snake_case>')
 
 name_extension = sys.argv[1]
 

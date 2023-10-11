@@ -8,15 +8,14 @@ This extension, Quack, allow you to ... <extension_goal>.
 
 
 ## Building
-### Dependencies
-DuckDB extensions use VCPKG for dependency management. To demonstrate that, the example extension in the template links against
-OpenSSL. Enabling VCPKG is very simple: follow the [installation instructions](https://vcpkg.io/en/getting-started) and export the following variable:
+### Managing dependencies
+DuckDB extensions uses VCPKG for dependency management. Enabling VCPKG is very simple: follow the [installation instructions](https://vcpkg.io/en/getting-started) or just run the following:
 ```shell
-export VCPKG_TOOLCHAIN_PATH=<path_to_your_vcpkg_installation>/scripts/buildsystems/vcpkg.cmake
+git clone https://github.com/Microsoft/vcpkg.git
+./vcpkg/bootstrap-vcpkg.sh
+export VCPKG_TOOLCHAIN_PATH=`pwd`/vcpkg/scripts/buildsystems/vcpkg.cmake
 ```
-Note: while using VCPKG for installation is recommended, the build will still work as long as
-CMake's `find_package` function is able to locate a compatible openssl version. Alternatively, feel free
-to remove the OpenSSL dependency completely to build the example extension without dependencies.
+Note: VCPKG is only required for extensions that want to rely on it for dependency management. If you want to develop an extension without dependencies, or want to do your own dependency management, just skip this step. Note that the example extension uses VCPKG to build with a dependency for instructive purposes, so when skipping this step the build may not work without removing the dependency.
 
 ### Build steps
 Now to build the extension, run:
