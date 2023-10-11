@@ -12,14 +12,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  duckdb-main-pipeline:
-    name: DuckDB Main Pipeline
-    uses: duckdb/duckdb/.github/workflows/_extension_distribution.yml@v0.9.0
+  duckdb-stable:
+    name: Build extension binaries
+    uses: duckdb/duckdb/.github/workflows/_extension_distribution.yml@v0.9.1
     with:
-      duckdb_version: v0.9.0
+      duckdb_version: v0.9.1
       extension_name: quack
-      extension_ref: ${{ github.ref }}
-    # Secrets are used to pass S3 credentials to the extension-upload script for distributing.
-    # Note that for security, switching to either explicitly passing secrets or moving the workflow into the extension
-    # repository can be considered.
+
+  duckdb-stable-deploy:
+    name: Deploy extension binaries
+    needs: duckdb-stable
+    uses: ./.github/workflows/_extension_deploy.yml
     secrets: inherit
+    with:
+      duckdb_version: v0.9.1
+      extension_name: quack
+      deploy_latest: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' }}
+      deploy_versioned: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' }}
