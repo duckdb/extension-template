@@ -1,15 +1,33 @@
 #!/usr/bin/python3
 
-import sys, os, shutil
+import sys, os, shutil, re
 from pathlib import Path
 
 shutil.copyfile(f'docs/NEXT_README.md', f'README.md')
 
-if (len(sys.argv) != 3):
-    raise Exception('usage: python3 set_extension_name.py <name_for_extension> <name_for_function>')
+if (len(sys.argv) != 2):
+    raise Exception('usage: python3 set_extension_name.py <name_for_extension_in_snake_case>')
 
 name_extension = sys.argv[1]
-name_function = sys.argv[2]
+
+def is_snake_case(s):
+    # Define the regex pattern for snake case with numbers
+    pattern = r'^[a-z0-9]+(_[a-z0-9]+)*$'
+
+    # Use re.match to check if the string matches the pattern
+    if re.match(pattern, s):
+        return True
+    else:
+        return False
+
+if name_extension[0].isdigit():
+    raise Exception('Please dont start your extension name with a number.')
+
+if not is_snake_case(name_extension):
+    raise Exception('Please enter the name of your extension in valid snake_case containing only lower case letters and numbers')
+
+def to_camel_case(snake_str):
+    return "".join(x.capitalize() for x in snake_str.lower().split("_"))
 
 def replace(file_name, to_find, to_replace):
     with open(file_name, 'r', encoding="utf8") as file :
@@ -31,18 +49,18 @@ files_to_search.extend(Path('./src').rglob('./*.md'))
 def replace_everywhere(to_find, to_replace):
     for path in files_to_search:
         replace(path, to_find, to_replace)
-        replace(path, to_find.capitalize(), to_replace.capitalize())
+        replace(path, to_find.capitalize(), to_camel_case(to_replace))
     
     replace("./CMakeLists.txt", to_find, to_replace)
     replace("./Makefile", to_find, to_replace)
-    replace("./Makefile", to_find.capitalize(), to_replace.capitalize())
+    replace("./Makefile", to_find.capitalize(), to_camel_case(to_replace))
     replace("./Makefile", to_find.upper(), to_replace.upper())
     replace("./README.md", to_find, to_replace)
 
-replace_everywhere("quack", name_function)
+replace_everywhere("quack", name_extension)
 replace_everywhere("<extension_name>", name_extension)
 
-string_to_replace = name_function
+string_to_replace = name_extension
 string_to_find = "quack"
 
 # rename files

@@ -64,7 +64,7 @@ jobs:
 
       - name: Rename extension
         run: |
-          python3 scripts/set_extension_name.py testext testext
+          python3 scripts/set_extension_name.py ext_1_a_123b_b11
 
       - name: Build
         run: |
@@ -117,7 +117,7 @@ jobs:
 
       - name: Rename extension
         run: |
-          python scripts/set_extension_name.py testext testext
+          python scripts/set_extension_name.py ext_1_a_123b_b11
 
       - name: Build
         run: |
@@ -166,7 +166,7 @@ jobs:
 
       - name: Rename extension
         run: |
-          python scripts/set_extension_name.py testext testext
+          python scripts/set_extension_name.py ext_1_a_123b_b11
 
       - name: Build
         run: |
