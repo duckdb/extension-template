@@ -1,6 +1,6 @@
 #
 # NOTE: this workflow is for testing the extension template itself,
-#     this workflow will be removed when scripts/set_extension_name.py is run
+#     this workflow will be removed when scripts/bootstrap-template.py is run
 #
 name: Extension Template
 on: [push, pull_request,repository_dispatch]
@@ -64,7 +64,7 @@ jobs:
 
       - name: Rename extension
         run: |
-          python3 scripts/set_extension_name.py ext_1_a_123b_b11
+          python3 scripts/bootstrap-template.py ext_1_a_123b_b11
 
       - name: Build
         run: |
@@ -117,7 +117,7 @@ jobs:
 
       - name: Rename extension
         run: |
-          python scripts/set_extension_name.py ext_1_a_123b_b11
+          python scripts/bootstrap-template.py ext_1_a_123b_b11
 
       - name: Build
         run: |
@@ -166,7 +166,7 @@ jobs:
 
       - name: Rename extension
         run: |
-          python scripts/set_extension_name.py ext_1_a_123b_b11
+          python scripts/bootstrap-template.py ext_1_a_123b_b11
 
       - name: Build
         run: |

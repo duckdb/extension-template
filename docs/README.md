@@ -1,28 +1,22 @@
-# WIP Disclaimer
-This template is currently a work-in-progress. Feel free to play around with it and give us feedback. Note also that this template depends on a development version of DuckDB.
-
-Get in contact with fellow extension developers on https://discord.duckdb.org and follow https://duckdb.org/news for more information on official launch.
-
 # DuckDB Extension Template
-The main goal of this template is to allow users to easily develop, test and distribute their own DuckDB extension.
+This repository contains a template for creating a DuckDB extension. The main goal of this template is to allow users to easily develop, test and distribute their own DuckDB extension. The main branch of the template is always based on the latest stable DuckDB allowing you to try out your extension right away.
 
 ## Getting started
 First step to getting started is to create your own repo from this template by clicking `Use this template`. Then clone your new repository using 
 ```sh
 git clone --recurse-submodules https://github.com/<you>/<your-new-extension-repo>.git
 ```
-Note that `--recurse-submodules` will ensure the correct version of duckdb is pulled allowing you to get started right away.
+Note that `--recurse-submodules` will ensure DuckDB is pulled which is required to build the extension.
 
 ## Building
-### Dependencies
-DuckDB extensions use VCPKG for dependency management. To demonstrate that, the example extension in the template links against
-OpenSSL. Enabling VCPKG is very simple: follow the [installation instructions](https://vcpkg.io/en/getting-started) and export the following variable:
+### Managing dependencies
+DuckDB extensions uses VCPKG for dependency management. Enabling VCPKG is very simple: follow the [installation instructions](https://vcpkg.io/en/getting-started) or just run the following:
 ```shell
-export VCPKG_TOOLCHAIN_PATH=<path_to_your_vcpkg_installation>/scripts/buildsystems/vcpkg.cmake
+git clone https://github.com/Microsoft/vcpkg.git
+./vcpkg/bootstrap-vcpkg.sh
+export VCPKG_TOOLCHAIN_PATH=`pwd`/vcpkg/scripts/buildsystems/vcpkg.cmake
 ```
-Note: while using VCPKG for installation is recommended, the build will still work as long as 
-CMake's `find_package` function is able to locate a compatible openssl version. Alternatively, feel free 
-to remove the OpenSSL dependency completely to build the example extension without dependencies.
+Note: VCPKG is only required for extensions that want to rely on it for dependency management. If you want to develop an extension without dependencies, or want to do your own dependency management, just skip this step. Note that the example extension uses VCPKG to build with a dependency for instructive purposes, so when skipping this step the build may not work without removing the dependency.
 
 ### Build steps
 Now to build the extension, run:
@@ -40,7 +34,7 @@ The main binaries that will be built are:
 - `<extension_name>.duckdb_extension` is the loadable binary as it would be distributed.
 
 ## Running the extension
-To run the extension code, simply start the shell with `./build/release/duckdb`.
+To run the extension code, simply start the shell with `./build/release/duckdb`. This shell will have the extension pre-loaded.  
 
 Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `quack()` that takes a string arguments and returns a string:
 ```
@@ -62,7 +56,7 @@ make test
 ## Getting started with your own extension
 After creating a repository from this template, the first step is to name your extension. To rename the extension, run:
 ```
-python3 ./scripts/set_extension_name.py <extension_name_you_want>
+python3 ./scripts/bootstrap-template.py <extension_name_you_want>
 ```
 Feel free to delete the script after this step.
 
@@ -131,15 +125,13 @@ LOAD <your_extension_name>
 ```
 
 ### Versioning of your extension
-Extension binaries will only work for the specific DuckDB version they were built for. Since you may want to support multiple 
-versions of DuckDB for a release of your extension, you can specify which versions to build for in the CI of this template.
-By default, the CI will build your extension against the version of the DuckDB submodule, which should generally be the most
-recent version of DuckDB. To build for multiple versions of DuckDB, simply add the version to the matrix variable, e.g.:
-```
-strategy:
-    matrix:
-        duckdb_version: [ '<submodule_version>', 'v0.7.0']
-```
+Extension binaries will only work for the specific DuckDB version they were built for. The version of DuckDB that is targeted 
+is set to the latest stable release for the main branch of the template so initially that is all you need. As new releases 
+of DuckDB are published however, the extension repository will need to be updated. The template comes with a workflow set-up
+that will automatically build the binaries for all DuckDB target architectures that are available in the corresponding DuckDB
+version. This workflow is found in `.github/workflows/MainDistributionPipeline.yml`. It is up to the extension developer to keep
+this up to date with DuckDB. Note also that its possible to distribute binaries for multiple DuckDB versions in this workflow 
+by simply duplicating the jobs.
 
 ## Setting up CLion 
 

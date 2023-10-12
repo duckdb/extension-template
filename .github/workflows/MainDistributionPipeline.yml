@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  duckdb-stable:
+  duckdb-stable-build:
     name: Build extension binaries
     uses: duckdb/duckdb/.github/workflows/_extension_distribution.yml@v0.9.1
     with:
@@ -21,7 +21,7 @@ jobs:
 
   duckdb-stable-deploy:
     name: Deploy extension binaries
-    needs: duckdb-stable
+    needs: duckdb-stable-build
     uses: ./.github/workflows/_extension_deploy.yml
     secrets: inherit
     with:
