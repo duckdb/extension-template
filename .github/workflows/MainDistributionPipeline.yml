@@ -14,9 +14,9 @@ concurrency:
 jobs:
   duckdb-stable-build:
     name: Build extension binaries
-    uses: duckdb/duckdb/.github/workflows/_extension_distribution.yml@v0.9.1
+    uses: duckdb/duckdb/.github/workflows/_extension_distribution.yml@v0.9.2
     with:
-      duckdb_version: v0.9.1
+      duckdb_version: v0.9.2
       extension_name: quack
 
   duckdb-stable-deploy:
@@ -25,7 +25,7 @@ jobs:
     uses: ./.github/workflows/_extension_deploy.yml
     secrets: inherit
     with:
-      duckdb_version: v0.9.1
+      duckdb_version: v0.9.2
       extension_name: quack
       deploy_latest: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' }}
       deploy_versioned: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' }}
