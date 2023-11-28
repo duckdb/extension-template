@@ -57,11 +57,6 @@ if [ -z "$AWS_ACCESS_KEY_ID" ]; then
     exit 0
 fi
 
-# upload versioned version
-if [[ $7 = 'true' ]]; then
-  aws s3 cp $ext.gz s3://$5/$1/$2/$3/$4/$1.duckdb_extension.gz --acl public-read
-fi
-
 # upload to latest version
 if [[ $6 = 'true' ]]; then
   aws s3 cp $ext.brotli s3://$5/duckdb-wasm/$3/$4/$1.duckdb_extension.wasm --acl public-read --content-encoding br --content-type="application/wasm"
