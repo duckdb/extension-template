@@ -50,6 +50,7 @@ def replace_everywhere(to_find, to_replace):
     for path in files_to_search:
         replace(path, to_find, to_replace)
         replace(path, to_find.capitalize(), to_camel_case(to_replace))
+        replace(path, to_find.upper(), to_replace.upper())
     
     replace("./CMakeLists.txt", to_find, to_replace)
     replace("./Makefile", to_find, to_replace)
