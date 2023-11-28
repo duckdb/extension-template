@@ -15,9 +15,9 @@ def duckdb_conn():
 def test_quack(duckdb_conn):
     duckdb_conn.execute("SELECT quack('Sam') as value;");
     res = duckdb_conn.fetchall()
-    assert(res[0][0] == "Quack Sam 🐥");
+    assert res[0][0] == "Quack Sam 🐥"
 
 def test_quack_openssl_version_test(duckdb_conn):
     duckdb_conn.execute("SELECT quack_openssl_version('Michael');");
     res = duckdb_conn.fetchall()
-    assert(res[0][0][0:51] == "Quack Michael, my linked OpenSSL version is OpenSSL");
+    assert res[0][0][0:51] == "Quack Michael, my linked OpenSSL version is OpenSSL"
