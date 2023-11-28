@@ -42,7 +42,7 @@ on:
       deploy_script:
         required: false
         type: string
-        default: "./scripts/extension-upload-wasm.sh"
+        default: "./scripts/extension-upload.sh"
       # Override the default matrix parse script with a custom script
       matrix_parse_script:
         required: false
