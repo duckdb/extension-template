@@ -9,7 +9,7 @@
 # <architecture>        : Architecture target of the extension binary
 # <s3_bucket>           : S3 bucket to upload to
 # <copy_to_latest>      : Set this as the latest version ("true" / "false", default: "false")
-# <copy_to_latest>      : Set this as a versioned version that will prevent its deletion
+# <copy_to_versioned>   : Set this as a versioned version that will prevent its deletion
 
 set -e
 
