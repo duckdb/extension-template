@@ -5,10 +5,15 @@ all: release
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJ_DIR := $(dir $(MKFILE_PATH))
 
+TEST_PATH="/test/unittest"
+DUCKDB_PATH="/duckdb"
+
+# For non-MinGW windows the path is slightly different
 ifeq ($(OS),Windows_NT)
+ifneq ($(CXX),g++)
 	TEST_PATH="/test/Release/unittest.exe"
-else
-	TEST_PATH="/test/unittest"
+	DUCKDB_PATH="/Release/duckdb.exe"
+endif
 endif
 
 #### OSX config
@@ -43,9 +48,9 @@ EXTENSION_FLAGS=\
 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_TEST_PATH="$(PROJ_DIR)test/sql"
 
 #### Add more of the DuckDB in-tree extensions here that you need (also feel free to remove them when not needed)
-EXTRA_EXTENSIONS_FLAG=-DBUILD_EXTENSIONS="tpch;visualizer"
+EXTRA_EXTENSIONS_FLAG=-DBUILD_EXTENSIONS="tpch"
 
-BUILD_FLAGS=-DEXTENSION_STATIC_BUILD=1 $(EXTENSION_FLAGS) ${EXTRA_EXTENSIONS_FLAG} $(OSX_BUILD_FLAG) $(TOOLCHAIN_FLAGS)
+BUILD_FLAGS=-DEXTENSION_STATIC_BUILD=1 $(EXTENSION_FLAGS) ${EXTRA_EXTENSIONS_FLAG} $(OSX_BUILD_FLAG) $(TOOLCHAIN_FLAGS) -DDUCKDB_EXPLICIT_PLATFORM='${DUCKDB_PLATFORM}'
 CLIENT_FLAGS:=
 
 #### Main build
