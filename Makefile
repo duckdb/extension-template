@@ -41,7 +41,7 @@ EXT_NAME=quack
 #### Configuration for this extension
 EXTENSION_NAME=QUACK
 EXTENSION_FLAGS=\
--DDUCKDB_EXTENSION_NAMES="quack" \
+-DDUCKDB_EXTENSION_NAMES="${EXT_NAME}" \
 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_PATH="$(PROJ_DIR)" \
 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_LOAD_TESTS=1 \
 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_INCLUDE_PATH="$(PROJ_DIR)src/include" \
@@ -82,22 +82,30 @@ release_python: release
 
 # Main tests
 test: test_release
+
 test_release: release
 	./build/release/$(TEST_PATH) "$(PROJ_DIR)test/*"
+
 test_debug: debug
 	./build/debug/$(TEST_PATH) "$(PROJ_DIR)test/*"
 
 #### Client tests
 DEBUG_EXT_PATH='$(PROJ_DIR)build/debug/extension/quack/quack.duckdb_extension'
 RELEASE_EXT_PATH='$(PROJ_DIR)build/release/extension/quack/quack.duckdb_extension'
+
 test_js: test_debug_js
+
 test_debug_js: debug_js
 	cd duckdb/tools/nodejs && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
+
 test_release_js: release_js
 	cd duckdb/tools/nodejs && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(RELEASE_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
+
 test_python: test_debug_python
+
 test_debug_python: debug_python
 	cd test/python && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) python3 -m pytest
+
 test_release_python: release_python
 	cd test/python && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(RELEASE_EXT_PATH) python3 -m pytest
 
