@@ -16,7 +16,6 @@ jobs:
     name: Build extension binaries
     uses: duckdb/duckdb/.github/workflows/_extension_distribution.yml@3fbbd15390059b8028ad6dfd56a3172e5ebc0ab8
     with:
-      vcpkg_commit: a42af01b72c28a8e1d7b48107b33e4f286a55ef6
       duckdb_version: v0.10.0
       extension_name: quack
 
