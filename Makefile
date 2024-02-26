@@ -41,7 +41,7 @@ EXT_NAME=quack
 #### Configuration for this extension
 EXTENSION_NAME=QUACK
 EXTENSION_FLAGS=\
--DDUCKDB_EXTENSION_NAMES="quack" \
+-DDUCKDB_EXTENSION_NAMES="${EXT_NAME}" \
 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_PATH="$(PROJ_DIR)" \
 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_LOAD_TESTS=1 \
 -DDUCKDB_EXTENSION_${EXTENSION_NAME}_INCLUDE_PATH="$(PROJ_DIR)src/include" \
@@ -82,22 +82,30 @@ release_python: release
 
 # Main tests
 test: test_release
+
 test_release: release
 	./build/release/$(TEST_PATH) "$(PROJ_DIR)test/*"
+
 test_debug: debug
 	./build/debug/$(TEST_PATH) "$(PROJ_DIR)test/*"
 
 #### Client tests
 DEBUG_EXT_PATH='$(PROJ_DIR)build/debug/extension/quack/quack.duckdb_extension'
 RELEASE_EXT_PATH='$(PROJ_DIR)build/release/extension/quack/quack.duckdb_extension'
+
 test_js: test_debug_js
+
 test_debug_js: debug_js
 	cd duckdb/tools/nodejs && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
+
 test_release_js: release_js
 	cd duckdb/tools/nodejs && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(RELEASE_EXT_PATH) npm run test-path -- "../../../test/nodejs/**/*.js"
+
 test_python: test_debug_python
+
 test_debug_python: debug_python
 	cd test/python && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(DEBUG_EXT_PATH) python3 -m pytest
+
 test_release_python: release_python
 	cd test/python && ${EXTENSION_NAME}_EXTENSION_BINARY_PATH=$(RELEASE_EXT_PATH) python3 -m pytest
 
@@ -117,22 +125,28 @@ clean:
 	cd duckdb && make clean
 	cd duckdb && make clean-python
 
-WASM_LINK_TIME_FLAGS=
+
+VCPKG_EMSDK_FLAGS=-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$(EMSDK)/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
+WASM_COMPILE_TIME_COMMON_FLAGS=-DWASM_LOADABLE_EXTENSIONS=1 -DBUILD_EXTENSIONS_ONLY=1 -DSKIP_EXTENSIONS="parquet;json" $(TOOLCHAIN_FLAGS) $(VCPKG_EMSDK_FLAGS) -DDUCKDB_CUSTOM_PLATFORM='${DUCKDB_PLATFORM}' -DDUCKDB_EXPLICIT_PLATFORM='${DUCKDB_PLATFORM}'
+WASM_CXX_MVP_FLAGS=
+WASM_CXX_EH_FLAGS=$(WASM_CXX_MVP_FLAGS) -fwasm-exceptions -DWEBDB_FAST_EXCEPTIONS=1
+WASM_CXX_THREADS_FLAGS=$(WASM_COMPILE_TIME_EH_FLAGS) -DWITH_WASM_THREADS=1 -DWITH_WASM_SIMD=1 -DWITH_WASM_BULK_MEMORY=1 -pthread
+WASM_LINK_TIME_FLAGS=-O3 -sSIDE_MODULE=2 -sEXPORTED_FUNCTIONS="_${EXT_NAME}_version,_${EXT_NAME}_init"
 
 wasm_mvp:
 	mkdir -p build/wasm_mvp
-	emcmake cmake $(GENERATOR) -DWASM_LOADABLE_EXTENSIONS=1 -DBUILD_EXTENSIONS_ONLY=1 -Bbuild/wasm_mvp -DCMAKE_CXX_FLAGS="-DDUCKDB_CUSTOM_PLATFORM=wasm_mvp" -DSKIP_EXTENSIONS="parquet" -S duckdb $(TOOLCHAIN_FLAGS) $(EXTENSION_FLAGS) -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$(EMSDK)/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DDUCKDB_EXPLICIT_PLATFORM='${DUCKDB_PLATFORM}'
+	emcmake cmake $(GENERATOR) $(EXTENSION_FLAGS) $(WASM_COMPILE_TIME_COMMON_FLAGS) -Bbuild/wasm_mvp -DCMAKE_CXX_FLAGS="$(WASM_CXX_MVP_FLAGS)" -S duckdb
 	emmake make -j8 -Cbuild/wasm_mvp
-	cd build/wasm_mvp/extension/${EXT_NAME} && emcc $f -sSIDE_MODULE=1 -o ../../${EXT_NAME}.duckdb_extension.wasm -O3 ${EXT_NAME}.duckdb_extension.wasm $(WASM_LINK_TIME_FLAGS)
+	cd build/wasm_mvp/extension/${EXT_NAME} && emcc $f -o ../../${EXT_NAME}.duckdb_extension.wasm ${EXT_NAME}.duckdb_extension.wasm.lib $(WASM_LINK_TIME_FLAGS)
 
 wasm_eh:
 	mkdir -p build/wasm_eh
-	emcmake cmake $(GENERATOR) -DWASM_LOADABLE_EXTENSIONS=1 -DBUILD_EXTENSIONS_ONLY=1 -Bbuild/wasm_eh -DCMAKE_CXX_FLAGS="-fwasm-exceptions -DWEBDB_FAST_EXCEPTIONS=1 -DDUCKDB_CUSTOM_PLATFORM=wasm_eh" -DSKIP_EXTENSIONS="parquet" -S duckdb $(TOOLCHAIN_FLAGS) $(EXTENSION_FLAGS) -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$(EMSDK)/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DDUCKDB_EXPLICIT_PLATFORM='${DUCKDB_PLATFORM}'
+	emcmake cmake $(GENERATOR) $(EXTENSION_FLAGS) $(WASM_COMPILE_TIME_COMMON_FLAGS) -Bbuild/wasm_eh -DCMAKE_CXX_FLAGS="$(WASM_CXX_EH_FLAGS)" -S duckdb
 	emmake make -j8 -Cbuild/wasm_eh
-	cd build/wasm_eh/extension/${EXT_NAME} && emcc $f -sSIDE_MODULE=1 -o ../../${EXT_NAME}.duckdb_extension.wasm -O3 ${EXT_NAME}.duckdb_extension.wasm $(WASM_LINK_TIME_FLAGS)
+	cd build/wasm_eh/extension/${EXT_NAME} && emcc $f -o ../../${EXT_NAME}.duckdb_extension.wasm ${EXT_NAME}.duckdb_extension.wasm.lib $(WASM_LINK_TIME_FLAGS)
 
 wasm_threads:
 	mkdir -p ./build/wasm_threads
-	emcmake cmake $(GENERATOR) -DWASM_LOADABLE_EXTENSIONS=1 -DBUILD_EXTENSIONS_ONLY=1 -Bbuild/wasm_threads -DCMAKE_CXX_FLAGS="-fwasm-exceptions -DWEBDB_FAST_EXCEPTIONS=1 -DWITH_WASM_THREADS=1 -DWITH_WASM_SIMD=1 -DWITH_WASM_BULK_MEMORY=1 -DDUCKDB_CUSTOM_PLATFORM=wasm_threads" -DSKIP_EXTENSIONS="parquet" -S duckdb $(TOOLCHAIN_FLAGS) $(EXTENSION_FLAGS) -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$(EMSDK)/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DDUCKDB_EXPLICIT_PLATFORM='${DUCKDB_PLATFORM}'
+	emcmake cmake $(GENERATOR) $(EXTENSION_FLAGS) $(WASM_COMPILE_TIME_COMMON_FLAGS) -Bbuild/wasm_threads -DCMAKE_CXX_FLAGS="$(WASM_CXX_THREADS_FLAGS)" -S duckdb
 	emmake make -j8 -Cbuild/wasm_threads
-	cd build/wasm_threads/extension/${EXT_NAME} && emcc $f -sSIDE_MODULE=1 -o ../../${EXT_NAME}.duckdb_extension.wasm -O3 ${EXT_NAME}.duckdb_extension.wasm $(WASM_LINK_TIME_FLAGS)
+	cd build/wasm_threads/extension/${EXT_NAME} && emcc $f -o ../../${EXT_NAME}.duckdb_extension.wasm ${EXT_NAME}.duckdb_extension.wasm.lib $(WASM_LINK_TIME_FLAGS) -sSHARED_MEMORY=1 -pthread
