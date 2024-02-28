@@ -6,5 +6,5 @@ duckdb_extension_load(quack
     LOAD_TESTS
 )
 
-# Any extra extensions
+# Any extra extensions that should be built
 # e.g.: duckdb_extension_load(json)
