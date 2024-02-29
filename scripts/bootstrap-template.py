@@ -4,6 +4,8 @@ import sys, os, shutil, re
 from pathlib import Path
 
 shutil.copyfile(f'docs/NEXT_README.md', f'README.md')
+os.remove(f'docs/NEXT_README.md')
+os.remove(f'docs/README.md')
 
 if (len(sys.argv) != 2):
     raise Exception('usage: python3 bootstrap-template.py <name_for_extension_in_snake_case>')
@@ -55,8 +57,10 @@ def replace_everywhere(to_find, to_replace):
     replace("./Makefile", to_find.capitalize(), to_camel_case(to_replace))
     replace("./Makefile", to_find.upper(), to_replace.upper())
     replace("./README.md", to_find, to_replace)
+    replace("./extension_config.cmake", to_find, to_replace)
 
 replace_everywhere("quack", name_extension)
+replace_everywhere("Quack", name_extension.capitalize())
 replace_everywhere("<extension_name>", name_extension)
 
 string_to_replace = name_extension
@@ -69,3 +73,6 @@ os.rename(f'src/include/{string_to_find}_extension.hpp', f'src/include/{string_t
 
 # remove template-specific files
 os.remove('.github/workflows/ExtensionTemplate.yml')
+
+# finally, remove this bootstrap file
+os.remove(__file__)
