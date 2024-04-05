@@ -56,8 +56,8 @@ std::string QuackExtension::Name() {
 extern "C" {
 
 DUCKDB_EXTENSION_API void quack_init(duckdb::DatabaseInstance &db) {
-    duckdb::DuckDB db_wrapper(db);
-    db_wrapper.LoadExtension<duckdb::QuackExtension>();
+	duckdb::DuckDB db_wrapper(db);
+	duckdb::LoadInternal(*db_wrapper.instance);
 }
 
 DUCKDB_EXTENSION_API const char *quack_version() {
