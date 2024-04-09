@@ -4,7 +4,8 @@ This repository contains a template for creating a DuckDB extension. The main go
 ## Getting started
 First step to getting started is to create your own repo from this template by clicking `Use this template`. Then clone your new repository using 
 ```sh
-git clone --recurse-submodules https://github.com/<you>/<your-new-extension-repo>.git
+git clone --recurse-submodules https://github.com/duckdb/extension-template.git
+
 ```
 Note that `--recurse-submodules` will ensure DuckDB is pulled which is required to build the extension.
 
