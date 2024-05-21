@@ -124,4 +124,4 @@ jobs:
         with:
           name: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-${{matrix.duckdb_arch}}${{inputs.artifact_postfix}}2
           path: |
-            build/**/${{ inputs.extension_name }}.duckdb_extension
+            /tmp/extension/${{ inputs.extension_name }}.duckdb_extension
