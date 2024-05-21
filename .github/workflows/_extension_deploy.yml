@@ -119,3 +119,9 @@ jobs:
           export EXT_VERSION=`git tag --points-at HEAD`
           export EXT_VERSION=${EXT_VERSION:=`git log -1 --format=%h`}
           ${{ inputs.deploy_script }} ${{ inputs.extension_name }} $EXT_VERSION $DUCKDB_VERSION ${{ matrix.duckdb_arch }} $BUCKET_NAME ${{inputs.deploy_latest || 'true' && 'false'}} ${{inputs.deploy_versioned || 'true' && 'false'}}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-${{matrix.duckdb_arch}}${{inputs.artifact_postfix}}2
+          path: |
+            build/**/${{ inputs.extension_name }}.duckdb_extension
