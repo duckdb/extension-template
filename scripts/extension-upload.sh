@@ -42,16 +42,18 @@ if [[ $4 == wasm* ]]; then
   echo -n -e '\x80\x02' >> $ext.append
 fi
 
+( command -v truncate && truncate -s -256 $ext.append ) || ( command -v gtruncate && gtruncate -s -256 $ext.append ) || exit 1
+
 # (Optionally) Sign binary
 if [ "$DUCKDB_EXTENSION_SIGNING_PK" != "" ]; then
   echo "$DUCKDB_EXTENSION_SIGNING_PK" > private.pem
   $script_dir/../duckdb/scripts/compute-extension-hash.sh $ext.append > $ext.hash
   openssl pkeyutl -sign -in $ext.hash -inkey private.pem -pkeyopt digest:sha256 -out $ext.sign
   rm -f private.pem
+else
+  # Default to 256 zeros
+  dd if=/dev/zero of=$ext.sign bs=256 count=1
 fi
-
-# Signature is always there, potentially defaulting to 256 zeros
-truncate -s 256 $ext.sign
 
 # append signature to extension binary
 cat $ext.sign >> $ext.append
