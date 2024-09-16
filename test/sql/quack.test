@@ -12,11 +12,49 @@ Catalog Error: Scalar Function with name quack does not exist!
 require quack
 
 # Confirm the extension works
+# Test scalar macro
+query I
+SELECT times_two(4);
+----
+8
+
+# Test table macro
+query I
+SELECT * FROM times_two_table(5);
+----
+10
+
+# Test scalar macro using a default
+query I
+SELECT default_to_times_two(4);
+----
+8
+
+# Test scalar macro overriding the default
+query I
+SELECT default_to_times_two(4, multiplier:=3);
+----
+12
+
+# Test table macro using a default
+query I
+SELECT * FROM default_to_times_two_table(5);
+----
+10
+
+# Test table macro overriding the default
+query I
+SELECT * FROM default_to_times_two_table(5, multiplier:=3);
+----
+15
+
+# Test scalar C++ function
 query I
 SELECT quack('Sam');
 ----
 Quack Sam 🐥
 
+# Test scalar C++ function using vcpkg and openssl
 query I
 SELECT quack_openssl_version('Michael') ILIKE 'Quack Michael, my linked OpenSSL version is OpenSSL%';
 ----
