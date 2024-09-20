@@ -36,13 +36,13 @@ inline void QuackOpenSSLVersionScalarFun(DataChunk &args, ExpressionState &state
 }
 
 // clang-format off
-// SQL Macros
+// SQL scalar macros
 static DefaultMacro quack_macros[] = {
     {DEFAULT_SCHEMA, "default_to_times_two", {"x", nullptr}, {{"multiplier", "2"}, {nullptr, nullptr}}, R"( x * multiplier )"},
     {nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}
 };
 
-// SQL Table Macros
+// SQL table macros
 static const DefaultTableMacro quack_table_macros[] = {
     {DEFAULT_SCHEMA, "default_to_times_two_table", {"x", nullptr}, {{"multiplier", "2"}, {nullptr, nullptr}},  R"( SELECT x * multiplier as output_column; )"},
 	{nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}
@@ -60,12 +60,12 @@ static void LoadInternal(DatabaseInstance &instance) {
                                                 LogicalType::VARCHAR, QuackOpenSSLVersionScalarFun);
     ExtensionUtil::RegisterFunction(instance, quack_openssl_version_scalar_function);
 
-    // Register Scalar Macros
+    // Register SQL scalar macros
 	for (idx_t index = 0; quack_macros[index].name != nullptr; index++) {
 		auto info = DefaultFunctionGenerator::CreateInternalMacroInfo(quack_macros[index]);
 		ExtensionUtil::RegisterFunction(instance, *info);
 	}
-    // Register Table Macros
+    // Register SQL table macros
     for (idx_t index = 0; quack_table_macros[index].name != nullptr; index++) {
 		auto table_info = DefaultTableFunctionGenerator::CreateTableMacroInfo(quack_table_macros[index]);
         ExtensionUtil::RegisterFunction(instance, *table_info);
