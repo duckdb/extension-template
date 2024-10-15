@@ -1,0 +1,23 @@
+# name: test/sql/vmf.test
+# description: test vmf extension
+# group: [vmf]
+
+# Before we load the extension, this will fail
+statement error
+SELECT vmf('Sam');
+----
+Catalog Error: Scalar Function with name vmf does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require vmf
+
+# Confirm the extension works
+query I
+SELECT vmf('Sam');
+----
+Vmf Sam 🐥
+
+query I
+SELECT vmf_openssl_version('Michael') ILIKE 'Vmf Michael, my linked OpenSSL version is OpenSSL%';
+----
+true

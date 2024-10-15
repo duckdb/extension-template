@@ -1,0 +1,107 @@
+#include "vmf_common.hpp"
+#include "vmf_functions.hpp"
+
+namespace duckdb {
+
+static unique_ptr<FunctionData> VMFMergePatchBind(ClientContext &context, ScalarFunction &bound_function,
+                                                   vector<unique_ptr<Expression>> &arguments) {
+	if (arguments.size() < 2) {
+		throw InvalidInputException("vmf_merge_patch requires at least two parameters");
+	}
+	bound_function.arguments.reserve(arguments.size());
+	for (auto &arg : arguments) {
+		const auto &arg_type = arg->return_type;
+		if (arg_type == LogicalTypeId::SQLNULL || arg_type == LogicalType::VARCHAR || arg_type.IsVMFType()) {
+			bound_function.arguments.push_back(arg_type);
+		} else {
+			throw InvalidInputException("Arguments to vmf_merge_patch must be of type VARCHAR or VMF");
+		}
+	}
+	return nullptr;
+}
+
+static inline yyvmf_mut_val *MergePatch(yyvmf_mut_doc *doc, yyvmf_mut_val *orig, yyvmf_mut_val *patch) {
+	if ((yyvmf_mut_get_tag(orig) != (YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE)) ||
+	    (yyvmf_mut_get_tag(patch) != (YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE))) {
+		// If either is not an object, we just return the second argument
+		return patch;
+	}
+
+	// Both are object, do the merge
+	return yyvmf_mut_merge_patch(doc, orig, patch);
+}
+
+static inline void ReadObjects(yyvmf_mut_doc *doc, Vector &input, yyvmf_mut_val *objs[], const idx_t count) {
+	UnifiedVectorFormat input_data;
+	auto &input_vector = input;
+	input_vector.ToUnifiedFormat(count, input_data);
+	auto inputs = UnifiedVectorFormat::GetData<string_t>(input_data);
+
+	// Read the documents
+	for (idx_t i = 0; i < count; i++) {
+		auto idx = input_data.sel->get_index(i);
+		if (!input_data.validity.RowIsValid(idx)) {
+			objs[i] = nullptr;
+		} else {
+			objs[i] =
+			    yyvmf_val_mut_copy(doc, VMFCommon::ReadDocument(inputs[idx], VMFCommon::READ_FLAG, &doc->alc)->root);
+		}
+	}
+}
+
+//! Follows MySQL behaviour
+static void MergePatchFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &lstate = VMFFunctionLocalState::ResetAndGet(state);
+	auto alc = lstate.vmf_allocator.GetYYAlc();
+
+	auto doc = VMFCommon::CreateDocument(lstate.vmf_allocator.GetYYAlc());
+	const auto count = args.size();
+
+	// Read the first vmf arg
+	auto origs = VMFCommon::AllocateArray<yyvmf_mut_val *>(alc, count);
+	ReadObjects(doc, args.data[0], origs, count);
+
+	// Read the next vmf args one by one and merge them into the first vmf arg
+	auto patches = VMFCommon::AllocateArray<yyvmf_mut_val *>(alc, count);
+	for (idx_t arg_idx = 1; arg_idx < args.data.size(); arg_idx++) {
+		ReadObjects(doc, args.data[arg_idx], patches, count);
+		for (idx_t i = 0; i < count; i++) {
+			if (patches[i] == nullptr) {
+				// Next vmf arg is NULL, obj becomes NULL
+				origs[i] = nullptr;
+			} else if (origs[i] == nullptr) {
+				// Current obj is NULL, obj becomes next vmf arg
+				origs[i] = patches[i];
+			} else {
+				// Neither is NULL, merge them
+				origs[i] = MergePatch(doc, origs[i], patches[i]);
+			}
+		}
+	}
+
+	// Write to result vector
+	auto result_data = FlatVector::GetData<string_t>(result);
+	auto &result_validity = FlatVector::Validity(result);
+	for (idx_t i = 0; i < count; i++) {
+		if (origs[i] == nullptr) {
+			result_validity.SetInvalid(i);
+		} else {
+			result_data[i] = VMFCommon::WriteVal<yyvmf_mut_val>(origs[i], alc);
+		}
+	}
+
+	if (args.AllConstant()) {
+		result.SetVectorType(VectorType::CONSTANT_VECTOR);
+	}
+}
+
+ScalarFunctionSet VMFFunctions::GetMergePatchFunction() {
+	ScalarFunction fun("vmf_merge_patch", {}, LogicalType::VMF(), MergePatchFunction, VMFMergePatchBind, nullptr,
+	                   nullptr, VMFFunctionLocalState::Init);
+	fun.varargs = LogicalType::ANY;
+	fun.null_handling = FunctionNullHandling::SPECIAL_HANDLING;
+
+	return ScalarFunctionSet(fun);
+}
+
+} // namespace duckdb

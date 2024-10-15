@@ -1,0 +1,55 @@
+[
+  {
+    "name": "VMFScanType",
+    "values": [
+      "INVALID",
+      {
+        "name": "READ_VMF",
+        "comment": "Read VMF straight to columnar data"
+      },
+      {
+        "name": "READ_VMF_OBJECTS",
+        "comment": "Read VMF values as strings"
+      },
+      {
+        "name": "SAMPLE",
+        "comment": "Sample run for schema detection"
+      }
+    ]
+  },
+  {
+    "name": "VMFRecordType",
+    "values": [
+      "AUTO_DETECT",
+      {
+        "name": "RECORDS",
+        "comment": "Sequential objects that are unpacked"
+      },
+      {
+        "name": "VALUES",
+        "comment": "Any other VMF type, e.g., ARRAY"
+      }
+    ]
+  },
+  {
+    "name": "VMFFormat",
+    "values": [
+      {
+        "name": "AUTO_DETECT",
+        "comment": "Auto-detect format (UNSTRUCTURED / NEWLINE_DELIMITED)"
+      },
+      {
+        "name": "UNSTRUCTURED",
+        "comment": "One unit after another, newlines can be anywhere"
+      },
+      {
+        "name": "NEWLINE_DELIMITED",
+        "comment": "Units are separated by newlines, newlines do not occur within Units (NDVMF)"
+      },
+      {
+        "name": "ARRAY",
+        "comment": "File is one big array of units"
+      }
+    ]
+  }
+]

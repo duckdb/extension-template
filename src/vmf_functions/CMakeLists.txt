@@ -1,0 +1,24 @@
+add_library_unity(
+  duckdb_vmf_functions
+  OBJECT
+  copy_vmf.cpp
+  vmf_array_length.cpp
+  vmf_contains.cpp
+  vmf_exists.cpp
+  vmf_extract.cpp
+  vmf_keys.cpp
+  vmf_merge_patch.cpp
+  vmf_pretty.cpp
+  vmf_structure.cpp
+  vmf_transform.cpp
+  vmf_create.cpp
+  vmf_type.cpp
+  vmf_valid.cpp
+  vmf_value.cpp
+  vmf_serialize_plan.cpp
+  vmf_serialize_sql.cpp
+  read_vmf.cpp
+  read_vmf_objects.cpp)
+set(ALL_OBJECT_FILES
+    ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:duckdb_vmf_functions>
+    PARENT_SCOPE)
