@@ -28,8 +28,8 @@ VMFStructureNode::VMFStructureNode(const char *key_ptr, const size_t key_len) : 
 	key = make_uniq<string>(key_ptr, key_len);
 }
 
-VMFStructureNode::VMFStructureNode(yyvmf_val *key_p, yyvmf_val *val_p, const bool ignore_errors)
-    : VMFStructureNode(unsafe_yyvmf_get_str(key_p), unsafe_yyvmf_get_len(key_p)) {
+VMFStructureNode::VMFStructureNode(yyjson_val *key_p, yyjson_val *val_p, const bool ignore_errors)
+    : VMFStructureNode(unsafe_yyjson_get_str(key_p), unsafe_yyjson_get_len(key_p)) {
 	VMFStructure::ExtractStructure(val_p, *this, ignore_errors);
 }
 
@@ -129,7 +129,7 @@ void VMFStructureNode::InitializeCandidateTypes(const idx_t max_depth, const boo
 	}
 }
 
-void VMFStructureNode::RefineCandidateTypes(yyvmf_val *vals[], const idx_t val_count, Vector &string_vector,
+void VMFStructureNode::RefineCandidateTypes(yyjson_val *vals[], const idx_t val_count, Vector &string_vector,
                                              ArenaAllocator &allocator, DateFormatMap &date_format_map) {
 	if (descriptions.size() != 1) {
 		// We can't refine types if we have more than 1 description (yet), defaults to VMF type for now
@@ -151,7 +151,7 @@ void VMFStructureNode::RefineCandidateTypes(yyvmf_val *vals[], const idx_t val_c
 	}
 }
 
-void VMFStructureNode::RefineCandidateTypesArray(yyvmf_val *vals[], const idx_t val_count, Vector &string_vector,
+void VMFStructureNode::RefineCandidateTypesArray(yyjson_val *vals[], const idx_t val_count, Vector &string_vector,
                                                   ArenaAllocator &allocator, DateFormatMap &date_format_map) {
 	D_ASSERT(descriptions.size() == 1 && descriptions[0].type == LogicalTypeId::LIST);
 	auto &desc = descriptions[0];
@@ -160,21 +160,21 @@ void VMFStructureNode::RefineCandidateTypesArray(yyvmf_val *vals[], const idx_t 
 
 	idx_t total_list_size = 0;
 	for (idx_t i = 0; i < val_count; i++) {
-		if (vals[i] && !unsafe_yyvmf_is_null(vals[i])) {
-			D_ASSERT(yyvmf_is_arr(vals[i]));
-			total_list_size += unsafe_yyvmf_get_len(vals[i]);
+		if (vals[i] && !unsafe_yyjson_is_null(vals[i])) {
+			D_ASSERT(yyjson_is_arr(vals[i]));
+			total_list_size += unsafe_yyjson_get_len(vals[i]);
 		}
 	}
 
 	idx_t offset = 0;
 	auto child_vals =
-	    reinterpret_cast<yyvmf_val **>(allocator.AllocateAligned(total_list_size * sizeof(yyvmf_val *)));
+	    reinterpret_cast<yyjson_val **>(allocator.AllocateAligned(total_list_size * sizeof(yyjson_val *)));
 
 	size_t idx, max;
-	yyvmf_val *child_val;
+	yyjson_val *child_val;
 	for (idx_t i = 0; i < val_count; i++) {
-		if (vals[i] && !unsafe_yyvmf_is_null(vals[i])) {
-			yyvmf_arr_foreach(vals[i], idx, max, child_val) {
+		if (vals[i] && !unsafe_yyjson_is_null(vals[i])) {
+			yyjson_arr_foreach(vals[i], idx, max, child_val) {
 				child_vals[offset++] = child_val;
 			}
 		}
@@ -182,34 +182,34 @@ void VMFStructureNode::RefineCandidateTypesArray(yyvmf_val *vals[], const idx_t 
 	child.RefineCandidateTypes(child_vals, total_list_size, string_vector, allocator, date_format_map);
 }
 
-void VMFStructureNode::RefineCandidateTypesObject(yyvmf_val *vals[], const idx_t val_count, Vector &string_vector,
+void VMFStructureNode::RefineCandidateTypesObject(yyjson_val *vals[], const idx_t val_count, Vector &string_vector,
                                                    ArenaAllocator &allocator, DateFormatMap &date_format_map) {
 	D_ASSERT(descriptions.size() == 1 && descriptions[0].type == LogicalTypeId::STRUCT);
 	auto &desc = descriptions[0];
 
 	const idx_t child_count = desc.children.size();
-	vector<yyvmf_val **> child_vals;
+	vector<yyjson_val **> child_vals;
 	child_vals.reserve(child_count);
 	for (idx_t child_idx = 0; child_idx < child_count; child_idx++) {
 		child_vals.emplace_back(
-		    reinterpret_cast<yyvmf_val **>(allocator.AllocateAligned(val_count * sizeof(yyvmf_val *))));
+		    reinterpret_cast<yyjson_val **>(allocator.AllocateAligned(val_count * sizeof(yyjson_val *))));
 	}
 
 	const auto found_keys = reinterpret_cast<bool *>(allocator.AllocateAligned(sizeof(bool) * child_count));
 
 	const auto &key_map = desc.key_map;
 	size_t idx, max;
-	yyvmf_val *child_key, *child_val;
+	yyjson_val *child_key, *child_val;
 	for (idx_t i = 0; i < val_count; i++) {
-		if (vals[i] && !unsafe_yyvmf_is_null(vals[i])) {
+		if (vals[i] && !unsafe_yyjson_is_null(vals[i])) {
 			idx_t found_key_count = 0;
 			memset(found_keys, false, child_count);
 
-			D_ASSERT(yyvmf_is_obj(vals[i]));
-			yyvmf_obj_foreach(vals[i], idx, max, child_key, child_val) {
-				D_ASSERT(yyvmf_is_str(child_key));
-				const auto key_ptr = unsafe_yyvmf_get_str(child_key);
-				const auto key_len = unsafe_yyvmf_get_len(child_key);
+			D_ASSERT(yyjson_is_obj(vals[i]));
+			yyjson_obj_foreach(vals[i], idx, max, child_key, child_val) {
+				D_ASSERT(yyjson_is_str(child_key));
+				const auto key_ptr = unsafe_yyjson_get_str(child_key);
+				const auto key_len = unsafe_yyjson_get_len(child_key);
 				auto it = key_map.find({key_ptr, key_len});
 				D_ASSERT(it != key_map.end());
 				const auto child_idx = it->second;
@@ -239,7 +239,7 @@ void VMFStructureNode::RefineCandidateTypesObject(yyvmf_val *vals[], const idx_t
 	}
 }
 
-void VMFStructureNode::RefineCandidateTypesString(yyvmf_val *vals[], const idx_t val_count, Vector &string_vector,
+void VMFStructureNode::RefineCandidateTypesString(yyjson_val *vals[], const idx_t val_count, Vector &string_vector,
                                                    DateFormatMap &date_format_map) {
 	D_ASSERT(descriptions.size() == 1 && descriptions[0].type == LogicalTypeId::VARCHAR);
 	if (descriptions[0].candidate_types.empty()) {
@@ -376,28 +376,28 @@ VMFStructureNode &VMFStructureDescription::GetOrCreateChild(const char *key_ptr,
 	return children.back();
 }
 
-VMFStructureNode &VMFStructureDescription::GetOrCreateChild(yyvmf_val *key, yyvmf_val *val,
+VMFStructureNode &VMFStructureDescription::GetOrCreateChild(yyjson_val *key, yyjson_val *val,
                                                               const bool ignore_errors) {
-	D_ASSERT(yyvmf_is_str(key));
-	auto &child = GetOrCreateChild(unsafe_yyvmf_get_str(key), unsafe_yyvmf_get_len(key));
+	D_ASSERT(yyjson_is_str(key));
+	auto &child = GetOrCreateChild(unsafe_yyjson_get_str(key), unsafe_yyjson_get_len(key));
 	VMFStructure::ExtractStructure(val, child, ignore_errors);
 	return child;
 }
 
-static void ExtractStructureArray(yyvmf_val *arr, VMFStructureNode &node, const bool ignore_errors) {
-	D_ASSERT(yyvmf_is_arr(arr));
+static void ExtractStructureArray(yyjson_val *arr, VMFStructureNode &node, const bool ignore_errors) {
+	D_ASSERT(yyjson_is_arr(arr));
 	auto &description = node.GetOrCreateDescription(LogicalTypeId::LIST);
 	auto &child = description.GetOrCreateChild();
 
 	size_t idx, max;
-	yyvmf_val *val;
-	yyvmf_arr_foreach(arr, idx, max, val) {
+	yyjson_val *val;
+	yyjson_arr_foreach(arr, idx, max, val) {
 		VMFStructure::ExtractStructure(val, child, ignore_errors);
 	}
 }
 
-static void ExtractStructureObject(yyvmf_val *obj, VMFStructureNode &node, const bool ignore_errors) {
-	D_ASSERT(yyvmf_is_obj(obj));
+static void ExtractStructureObject(yyjson_val *obj, VMFStructureNode &node, const bool ignore_errors) {
+	D_ASSERT(yyjson_is_obj(obj));
 	auto &description = node.GetOrCreateDescription(LogicalTypeId::STRUCT);
 
 	// Keep track of keys so we can detect duplicates
@@ -405,9 +405,9 @@ static void ExtractStructureObject(yyvmf_val *obj, VMFStructureNode &node, const
 	case_insensitive_set_t ci_obj_keys;
 
 	size_t idx, max;
-	yyvmf_val *key, *val;
-	yyvmf_obj_foreach(obj, idx, max, key, val) {
-		const string obj_key(unsafe_yyvmf_get_str(key), unsafe_yyvmf_get_len(key));
+	yyjson_val *key, *val;
+	yyjson_obj_foreach(obj, idx, max, key, val) {
+		const string obj_key(unsafe_yyjson_get_str(key), unsafe_yyjson_get_len(key));
 		auto insert_result = obj_keys.insert(obj_key);
 		if (!ignore_errors && !insert_result.second) { // Exact match
 			VMFCommon::ThrowValFormatError("Duplicate key \"" + obj_key + "\" in object %s", obj);
@@ -422,70 +422,70 @@ static void ExtractStructureObject(yyvmf_val *obj, VMFStructureNode &node, const
 	}
 }
 
-static void ExtractStructureVal(yyvmf_val *val, VMFStructureNode &node) {
-	D_ASSERT(!yyvmf_is_arr(val) && !yyvmf_is_obj(val));
+static void ExtractStructureVal(yyjson_val *val, VMFStructureNode &node) {
+	D_ASSERT(!yyjson_is_arr(val) && !yyjson_is_obj(val));
 	node.GetOrCreateDescription(VMFCommon::ValTypeToLogicalTypeId(val));
 }
 
-void VMFStructure::ExtractStructure(yyvmf_val *val, VMFStructureNode &node, const bool ignore_errors) {
+void VMFStructure::ExtractStructure(yyjson_val *val, VMFStructureNode &node, const bool ignore_errors) {
 	node.count++;
-	const auto tag = yyvmf_get_tag(val);
-	if (tag == (YYVMF_TYPE_NULL | YYVMF_SUBTYPE_NONE)) {
+	const auto tag = yyjson_get_tag(val);
+	if (tag == (yyjson_TYPE_NULL | yyjson_SUBTYPE_NONE)) {
 		node.null_count++;
 	}
 
 	switch (tag) {
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
 		return ExtractStructureArray(val, node, ignore_errors);
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
 		return ExtractStructureObject(val, node, ignore_errors);
 	default:
 		return ExtractStructureVal(val, node);
 	}
 }
 
-VMFStructureNode ExtractStructureInternal(yyvmf_val *val, const bool ignore_errors) {
+VMFStructureNode ExtractStructureInternal(yyjson_val *val, const bool ignore_errors) {
 	VMFStructureNode node;
 	VMFStructure::ExtractStructure(val, node, ignore_errors);
 	return node;
 }
 
 //! Forward declaration for recursion
-static yyvmf_mut_val *ConvertStructure(const VMFStructureNode &node, yyvmf_mut_doc *doc);
+static yyjson_mut_val *ConvertStructure(const VMFStructureNode &node, yyjson_mut_doc *doc);
 
-static yyvmf_mut_val *ConvertStructureArray(const VMFStructureNode &node, yyvmf_mut_doc *doc) {
+static yyjson_mut_val *ConvertStructureArray(const VMFStructureNode &node, yyjson_mut_doc *doc) {
 	D_ASSERT(node.descriptions.size() == 1 && node.descriptions[0].type == LogicalTypeId::LIST);
 	const auto &desc = node.descriptions[0];
 	D_ASSERT(desc.children.size() == 1);
 
-	const auto arr = yyvmf_mut_arr(doc);
-	yyvmf_mut_arr_append(arr, ConvertStructure(desc.children[0], doc));
+	const auto arr = yyjson_mut_arr(doc);
+	yyjson_mut_arr_append(arr, ConvertStructure(desc.children[0], doc));
 	return arr;
 }
 
-static yyvmf_mut_val *ConvertStructureObject(const VMFStructureNode &node, yyvmf_mut_doc *doc) {
+static yyjson_mut_val *ConvertStructureObject(const VMFStructureNode &node, yyjson_mut_doc *doc) {
 	D_ASSERT(node.descriptions.size() == 1 && node.descriptions[0].type == LogicalTypeId::STRUCT);
 	auto &desc = node.descriptions[0];
 	if (desc.children.empty()) {
 		// Empty struct - let's do VMF instead
-		return yyvmf_mut_str(doc, LogicalType::VMF_TYPE_NAME);
+		return yyjson_mut_str(doc, LogicalType::VMF_TYPE_NAME);
 	}
 
-	const auto obj = yyvmf_mut_obj(doc);
+	const auto obj = yyjson_mut_obj(doc);
 	for (auto &child : desc.children) {
 		D_ASSERT(child.key);
-		yyvmf_mut_obj_add(obj, yyvmf_mut_strn(doc, child.key->c_str(), child.key->length()),
+		yyjson_mut_obj_add(obj, yyjson_mut_strn(doc, child.key->c_str(), child.key->length()),
 		                   ConvertStructure(child, doc));
 	}
 	return obj;
 }
 
-static yyvmf_mut_val *ConvertStructure(const VMFStructureNode &node, yyvmf_mut_doc *doc) {
+static yyjson_mut_val *ConvertStructure(const VMFStructureNode &node, yyjson_mut_doc *doc) {
 	if (node.descriptions.empty()) {
-		return yyvmf_mut_str(doc, VMFCommon::TYPE_STRING_NULL);
+		return yyjson_mut_str(doc, VMFCommon::TYPE_STRING_NULL);
 	}
 	if (node.descriptions.size() != 1) { // Inconsistent types, so we resort to VMF
-		return yyvmf_mut_str(doc, LogicalType::VMF_TYPE_NAME);
+		return yyjson_mut_str(doc, LogicalType::VMF_TYPE_NAME);
 	}
 	auto &desc = node.descriptions[0];
 	D_ASSERT(desc.type != LogicalTypeId::INVALID);
@@ -495,13 +495,13 @@ static yyvmf_mut_val *ConvertStructure(const VMFStructureNode &node, yyvmf_mut_d
 	case LogicalTypeId::STRUCT:
 		return ConvertStructureObject(node, doc);
 	default:
-		return yyvmf_mut_str(doc, EnumUtil::ToChars(desc.type));
+		return yyjson_mut_str(doc, EnumUtil::ToChars(desc.type));
 	}
 }
 
-static string_t VMFStructureFunction(yyvmf_val *val, yyvmf_alc *alc, Vector &, ValidityMask &, idx_t) {
-	return VMFCommon::WriteVal<yyvmf_mut_val>(
-	    ConvertStructure(ExtractStructureInternal(val, true), yyvmf_mut_doc_new(alc)), alc);
+static string_t VMFStructureFunction(yyjson_val *val, yyjson_alc *alc, Vector &, ValidityMask &, idx_t) {
+	return VMFCommon::WriteVal<yyjson_mut_val>(
+	    ConvertStructure(ExtractStructureInternal(val, true), yyjson_mut_doc_new(alc)), alc);
 }
 
 static void StructureFunction(DataChunk &args, ExpressionState &state, Vector &result) {

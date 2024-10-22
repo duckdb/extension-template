@@ -2,7 +2,7 @@
 
 namespace duckdb {
 
-static inline string_t GetType(yyvmf_val *val, yyvmf_alc *, Vector &, ValidityMask &mask, idx_t idx) {
+static inline string_t GetType(yyjson_val *val, yyjson_alc *, Vector &, ValidityMask &mask, idx_t idx) {
 	return VMFCommon::ValTypeToStringT(val);
 }
 

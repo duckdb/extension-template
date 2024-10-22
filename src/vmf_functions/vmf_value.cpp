@@ -2,15 +2,15 @@
 
 namespace duckdb {
 
-static inline string_t ValueFromVal(yyvmf_val *val, yyvmf_alc *alc, Vector &, ValidityMask &mask, idx_t idx) {
-	switch (yyvmf_get_tag(val)) {
-	case YYVMF_TYPE_NULL | YYVMF_SUBTYPE_NONE:
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
+static inline string_t ValueFromVal(yyjson_val *val, yyjson_alc *alc, Vector &, ValidityMask &mask, idx_t idx) {
+	switch (yyjson_get_tag(val)) {
+	case yyjson_TYPE_NULL | yyjson_SUBTYPE_NONE:
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
 		mask.SetInvalid(idx);
 		return string_t {};
 	default:
-		return VMFCommon::WriteVal<yyvmf_val>(val, alc);
+		return VMFCommon::WriteVal<yyjson_val>(val, alc);
 	}
 }
 

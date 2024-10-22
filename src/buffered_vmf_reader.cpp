@@ -321,7 +321,7 @@ idx_t BufferedVMFReader::GetLineNumber(idx_t buf_index, idx_t line_or_object_in_
 	}
 }
 
-void BufferedVMFReader::ThrowParseError(idx_t buf_index, idx_t line_or_object_in_buf, yyvmf_read_err &err,
+void BufferedVMFReader::ThrowParseError(idx_t buf_index, idx_t line_or_object_in_buf, yyjson_read_err &err,
                                          const string &extra) {
 	string unit = options.format == VMFFormat::NEWLINE_DELIMITED ? "line" : "record/value";
 	auto line = GetLineNumber(buf_index, line_or_object_in_buf);

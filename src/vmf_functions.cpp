@@ -237,7 +237,7 @@ static bool CastVarcharToVMF(Vector &source, Vector &result, idx_t count, CastPa
 		    auto data = input.GetDataWriteable();
 		    const auto length = input.GetSize();
 
-		    yyvmf_read_err error;
+		    yyjson_read_err error;
 		    auto doc = VMFCommon::ReadDocumentUnsafe(data, length, VMFCommon::READ_FLAG, alc, &error);
 
 		    if (!doc) {

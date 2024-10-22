@@ -20,18 +20,18 @@ static unique_ptr<FunctionData> VMFMergePatchBind(ClientContext &context, Scalar
 	return nullptr;
 }
 
-static inline yyvmf_mut_val *MergePatch(yyvmf_mut_doc *doc, yyvmf_mut_val *orig, yyvmf_mut_val *patch) {
-	if ((yyvmf_mut_get_tag(orig) != (YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE)) ||
-	    (yyvmf_mut_get_tag(patch) != (YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE))) {
+static inline yyjson_mut_val *MergePatch(yyjson_mut_doc *doc, yyjson_mut_val *orig, yyjson_mut_val *patch) {
+	if ((yyjson_mut_get_tag(orig) != (yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE)) ||
+	    (yyjson_mut_get_tag(patch) != (yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE))) {
 		// If either is not an object, we just return the second argument
 		return patch;
 	}
 
 	// Both are object, do the merge
-	return yyvmf_mut_merge_patch(doc, orig, patch);
+	return yyjson_mut_merge_patch(doc, orig, patch);
 }
 
-static inline void ReadObjects(yyvmf_mut_doc *doc, Vector &input, yyvmf_mut_val *objs[], const idx_t count) {
+static inline void ReadObjects(yyjson_mut_doc *doc, Vector &input, yyjson_mut_val *objs[], const idx_t count) {
 	UnifiedVectorFormat input_data;
 	auto &input_vector = input;
 	input_vector.ToUnifiedFormat(count, input_data);
@@ -44,7 +44,7 @@ static inline void ReadObjects(yyvmf_mut_doc *doc, Vector &input, yyvmf_mut_val 
 			objs[i] = nullptr;
 		} else {
 			objs[i] =
-			    yyvmf_val_mut_copy(doc, VMFCommon::ReadDocument(inputs[idx], VMFCommon::READ_FLAG, &doc->alc)->root);
+			    yyjson_val_mut_copy(doc, VMFCommon::ReadDocument(inputs[idx], VMFCommon::READ_FLAG, &doc->alc)->root);
 		}
 	}
 }
@@ -58,11 +58,11 @@ static void MergePatchFunction(DataChunk &args, ExpressionState &state, Vector &
 	const auto count = args.size();
 
 	// Read the first vmf arg
-	auto origs = VMFCommon::AllocateArray<yyvmf_mut_val *>(alc, count);
+	auto origs = VMFCommon::AllocateArray<yyjson_mut_val *>(alc, count);
 	ReadObjects(doc, args.data[0], origs, count);
 
 	// Read the next vmf args one by one and merge them into the first vmf arg
-	auto patches = VMFCommon::AllocateArray<yyvmf_mut_val *>(alc, count);
+	auto patches = VMFCommon::AllocateArray<yyjson_mut_val *>(alc, count);
 	for (idx_t arg_idx = 1; arg_idx < args.data.size(); arg_idx++) {
 		ReadObjects(doc, args.data[arg_idx], patches, count);
 		for (idx_t i = 0; i < count; i++) {
@@ -86,7 +86,7 @@ static void MergePatchFunction(DataChunk &args, ExpressionState &state, Vector &
 		if (origs[i] == nullptr) {
 			result_validity.SetInvalid(i);
 		} else {
-			result_data[i] = VMFCommon::WriteVal<yyvmf_mut_val>(origs[i], alc);
+			result_data[i] = VMFCommon::WriteVal<yyjson_mut_val>(origs[i], alc);
 		}
 	}
 

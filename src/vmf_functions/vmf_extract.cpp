@@ -2,20 +2,20 @@
 
 namespace duckdb {
 
-static inline string_t ExtractFromVal(yyvmf_val *val, yyvmf_alc *alc, Vector &, ValidityMask &, idx_t) {
-	return VMFCommon::WriteVal<yyvmf_val>(val, alc);
+static inline string_t ExtractFromVal(yyjson_val *val, yyjson_alc *alc, Vector &, ValidityMask &, idx_t) {
+	return VMFCommon::WriteVal<yyjson_val>(val, alc);
 }
 
-static inline string_t ExtractStringFromVal(yyvmf_val *val, yyvmf_alc *alc, Vector &, ValidityMask &mask, idx_t idx) {
-	switch (yyvmf_get_tag(val)) {
-	case YYVMF_TYPE_NULL | YYVMF_SUBTYPE_NONE:
+static inline string_t ExtractStringFromVal(yyjson_val *val, yyjson_alc *alc, Vector &, ValidityMask &mask, idx_t idx) {
+	switch (yyjson_get_tag(val)) {
+	case yyjson_TYPE_NULL | yyjson_SUBTYPE_NONE:
 		mask.SetInvalid(idx);
 		return string_t {};
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NOESC:
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NONE:
-		return string_t(unsafe_yyvmf_get_str(val), unsafe_yyvmf_get_len(val));
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NOESC:
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NONE:
+		return string_t(unsafe_yyjson_get_str(val), unsafe_yyjson_get_len(val));
 	default:
-		return VMFCommon::WriteVal<yyvmf_val>(val, alc);
+		return VMFCommon::WriteVal<yyjson_val>(val, alc);
 	}
 }
 

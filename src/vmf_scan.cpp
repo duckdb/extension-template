@@ -381,8 +381,8 @@ static inline void TrimWhitespace(VMFString &line) {
 }
 
 void VMFScanLocalState::ParseVMF(char *const vmf_start, const idx_t vmf_size, const idx_t remaining) {
-	yyvmf_doc *doc;
-	yyvmf_read_err err;
+	yyjson_doc *doc;
+	yyjson_read_err err;
 	if (bind_data.type == VMFScanType::READ_VMF_OBJECTS) { // If we return strings, we cannot parse INSITU
 		doc = VMFCommon::ReadDocumentUnsafe(vmf_start, vmf_size, VMFCommon::READ_STOP_FLAG, allocator.GetYYAlc(),
 		                                     &err);
@@ -390,15 +390,15 @@ void VMFScanLocalState::ParseVMF(char *const vmf_start, const idx_t vmf_size, co
 		doc = VMFCommon::ReadDocumentUnsafe(vmf_start, remaining, VMFCommon::READ_INSITU_FLAG, allocator.GetYYAlc(),
 		                                     &err);
 	}
-	if (!bind_data.ignore_errors && err.code != YYVMF_READ_SUCCESS) {
+	if (!bind_data.ignore_errors && err.code != yyjson_READ_SUCCESS) {
 		current_reader->ThrowParseError(current_buffer_handle->buffer_index, lines_or_objects_in_buffer, err);
 	}
 
-	// We parse with YYVMF_STOP_WHEN_DONE, so we need to check this by hand
-	const auto read_size = yyvmf_doc_get_read_size(doc);
+	// We parse with yyjson_STOP_WHEN_DONE, so we need to check this by hand
+	const auto read_size = yyjson_doc_get_read_size(doc);
 	if (read_size > vmf_size) {
 		// Can't go past the boundary, even with ignore_errors
-		err.code = YYVMF_READ_ERROR_UNEXPECTED_END;
+		err.code = yyjson_READ_ERROR_UNEXPECTED_END;
 		err.msg = "unexpected end of data";
 		err.pos = vmf_size;
 		current_reader->ThrowParseError(current_buffer_handle->buffer_index, lines_or_objects_in_buffer, err,
@@ -408,7 +408,7 @@ void VMFScanLocalState::ParseVMF(char *const vmf_start, const idx_t vmf_size, co
 		idx_t rem = vmf_size;
 		SkipWhitespace(vmf_start, off, rem);
 		if (off != rem) { // Between end of document and boundary should be whitespace only
-			err.code = YYVMF_READ_ERROR_UNEXPECTED_CONTENT;
+			err.code = yyjson_READ_ERROR_UNEXPECTED_CONTENT;
 			err.msg = "unexpected content after document";
 			err.pos = read_size;
 			current_reader->ThrowParseError(current_buffer_handle->buffer_index, lines_or_objects_in_buffer, err,
@@ -452,25 +452,25 @@ bool VMFScanLocalState::IsParallel(VMFScanGlobalState &gstate) const {
 }
 
 static pair<VMFFormat, VMFRecordType> DetectFormatAndRecordType(char *const buffer_ptr, const idx_t buffer_size,
-                                                                  yyvmf_alc *alc) {
+                                                                  yyjson_alc *alc) {
 	// First we do the easy check whether it's NEWLINE_DELIMITED
 	auto line_end = NextNewline(buffer_ptr, buffer_size);
 	if (line_end != nullptr) {
 		idx_t line_size = line_end - buffer_ptr;
 		SkipWhitespace(buffer_ptr, line_size, buffer_size);
 
-		yyvmf_read_err error;
+		yyjson_read_err error;
 		auto doc = VMFCommon::ReadDocumentUnsafe(buffer_ptr, line_size, VMFCommon::READ_FLAG, alc, &error);
-		if (error.code == YYVMF_READ_SUCCESS) { // We successfully read the line
-			if (yyvmf_is_arr(doc->root) && line_size == buffer_size) {
+		if (error.code == yyjson_READ_SUCCESS) { // We successfully read the line
+			if (yyjson_is_arr(doc->root) && line_size == buffer_size) {
 				// It's just one array, let's actually assume ARRAY, not NEWLINE_DELIMITED
-				if (yyvmf_arr_size(doc->root) == 0 || yyvmf_is_obj(yyvmf_arr_get(doc->root, 0))) {
+				if (yyjson_arr_size(doc->root) == 0 || yyjson_is_obj(yyjson_arr_get(doc->root, 0))) {
 					// Either an empty array (assume records), or an array of objects
 					return make_pair(VMFFormat::ARRAY, VMFRecordType::RECORDS);
 				} else {
 					return make_pair(VMFFormat::ARRAY, VMFRecordType::VALUES);
 				}
-			} else if (yyvmf_is_obj(doc->root)) {
+			} else if (yyjson_is_obj(doc->root)) {
 				return make_pair(VMFFormat::NEWLINE_DELIMITED, VMFRecordType::RECORDS);
 			} else {
 				return make_pair(VMFFormat::NEWLINE_DELIMITED, VMFRecordType::VALUES);
@@ -495,14 +495,14 @@ static pair<VMFFormat, VMFRecordType> DetectFormatAndRecordType(char *const buff
 	}
 
 	// It's definitely an ARRAY, but now we have to figure out if there's more than one top-level array
-	yyvmf_read_err error;
+	yyjson_read_err error;
 	auto doc =
 	    VMFCommon::ReadDocumentUnsafe(buffer_ptr + buffer_offset, remaining, VMFCommon::READ_STOP_FLAG, alc, &error);
-	if (error.code == YYVMF_READ_SUCCESS) {
-		D_ASSERT(yyvmf_is_arr(doc->root));
+	if (error.code == yyjson_READ_SUCCESS) {
+		D_ASSERT(yyjson_is_arr(doc->root));
 
 		// We successfully read something!
-		buffer_offset += yyvmf_doc_get_read_size(doc);
+		buffer_offset += yyjson_doc_get_read_size(doc);
 		SkipWhitespace(buffer_ptr, buffer_offset, buffer_size);
 		remaining = buffer_size - buffer_offset;
 
@@ -511,7 +511,7 @@ static pair<VMFFormat, VMFRecordType> DetectFormatAndRecordType(char *const buff
 		}
 
 		// Just one array, check what's in there
-		if (yyvmf_arr_size(doc->root) == 0 || yyvmf_is_obj(yyvmf_arr_get(doc->root, 0))) {
+		if (yyjson_arr_size(doc->root) == 0 || yyjson_is_obj(yyjson_arr_get(doc->root, 0))) {
 			// Either an empty array (assume records), or an array of objects
 			return make_pair(VMFFormat::ARRAY, VMFRecordType::RECORDS);
 		} else {
@@ -647,8 +647,8 @@ bool VMFScanLocalState::ReadNextBuffer(VMFScanGlobalState &gstate) {
 	prev_buffer_remainder = 0;
 	lines_or_objects_in_buffer = 0;
 
-	// YYVMF needs this
-	memset(buffer_ptr + buffer_size, 0, YYVMF_PADDING_SIZE);
+	// yyjson needs this
+	memset(buffer_ptr + buffer_size, 0, yyjson_PADDING_SIZE);
 
 	return true;
 }
@@ -702,7 +702,7 @@ bool VMFScanLocalState::ReadNextBufferSeek(VMFScanGlobalState &gstate, Allocated
                                             optional_idx &buffer_index, bool &file_done) {
 	auto &file_handle = current_reader->GetFileHandle();
 
-	idx_t request_size = gstate.buffer_capacity - prev_buffer_remainder - YYVMF_PADDING_SIZE;
+	idx_t request_size = gstate.buffer_capacity - prev_buffer_remainder - yyjson_PADDING_SIZE;
 	idx_t read_position;
 	idx_t read_size;
 
@@ -749,7 +749,7 @@ bool VMFScanLocalState::ReadNextBufferSeek(VMFScanGlobalState &gstate, Allocated
 
 bool VMFScanLocalState::ReadNextBufferNoSeek(VMFScanGlobalState &gstate, AllocatedData &buffer,
                                               optional_idx &buffer_index, bool &file_done) {
-	idx_t request_size = gstate.buffer_capacity - prev_buffer_remainder - YYVMF_PADDING_SIZE;
+	idx_t request_size = gstate.buffer_capacity - prev_buffer_remainder - yyjson_PADDING_SIZE;
 	idx_t read_size;
 
 	{
@@ -869,7 +869,7 @@ bool VMFScanLocalState::ReconstructFirstObject(VMFScanGlobalState &gstate) {
 
 		// And copy the remainder of the line to the reconstruct buffer
 		memcpy(reconstruct_ptr + part1_size, buffer_ptr, part2_size);
-		memset(reconstruct_ptr + line_size, 0, YYVMF_PADDING_SIZE);
+		memset(reconstruct_ptr + line_size, 0, yyjson_PADDING_SIZE);
 		buffer_offset += part2_size;
 	}
 
@@ -918,8 +918,8 @@ void VMFScanLocalState::ParseNextChunk(VMFScanGlobalState &gstate) {
 			if (buffer_ptr[buffer_offset] == ',' || buffer_ptr[buffer_offset] == ']') {
 				buffer_offset++;
 			} else { // We can't ignore this error, even with 'ignore_errors'
-				yyvmf_read_err err;
-				err.code = YYVMF_READ_ERROR_UNEXPECTED_CHARACTER;
+				yyjson_read_err err;
+				err.code = yyjson_READ_ERROR_UNEXPECTED_CHARACTER;
 				err.msg = "unexpected character";
 				err.pos = vmf_size;
 				current_reader->ThrowParseError(current_buffer_handle->buffer_index, lines_or_objects_in_buffer, err);
@@ -932,7 +932,7 @@ void VMFScanLocalState::ParseNextChunk(VMFScanGlobalState &gstate) {
 	total_tuple_count += scan_count;
 }
 
-yyvmf_alc *VMFScanLocalState::GetAllocator() {
+yyjson_alc *VMFScanLocalState::GetAllocator() {
 	return allocator.GetYYAlc();
 }
 

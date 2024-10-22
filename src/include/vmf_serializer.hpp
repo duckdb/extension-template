@@ -7,9 +7,9 @@ namespace duckdb {
 
 struct VmfSerializer : Serializer {
 private:
-	yyvmf_mut_doc *doc;
-	yyvmf_mut_val *current_tag;
-	vector<yyvmf_mut_val *> stack;
+	yyjson_mut_doc *doc;
+	yyjson_mut_val *current_tag;
+	vector<yyjson_mut_val *> stack;
 
 	// Skip writing property if null
 	bool skip_if_null = false;
@@ -17,29 +17,29 @@ private:
 	bool skip_if_empty = false;
 
 	// Get the current vmf value
-	inline yyvmf_mut_val *Current() {
+	inline yyjson_mut_val *Current() {
 		return stack.back();
 	};
 
 	// Either adds a value to the current object with the current tag, or appends it to the current array
-	void PushValue(yyvmf_mut_val *val);
+	void PushValue(yyjson_mut_val *val);
 
 public:
-	explicit VmfSerializer(yyvmf_mut_doc *doc, bool skip_if_null, bool skip_if_empty, bool skip_if_default)
-	    : doc(doc), stack({yyvmf_mut_obj(doc)}), skip_if_null(skip_if_null), skip_if_empty(skip_if_empty) {
+	explicit VmfSerializer(yyjson_mut_doc *doc, bool skip_if_null, bool skip_if_empty, bool skip_if_default)
+	    : doc(doc), stack({yyjson_mut_obj(doc)}), skip_if_null(skip_if_null), skip_if_empty(skip_if_empty) {
 		options.serialize_enum_as_string = true;
 		options.serialize_default_values = !skip_if_default;
 	}
 
 	template <class T>
-	static yyvmf_mut_val *Serialize(T &value, yyvmf_mut_doc *doc, bool skip_if_null, bool skip_if_empty,
+	static yyjson_mut_val *Serialize(T &value, yyjson_mut_doc *doc, bool skip_if_null, bool skip_if_empty,
 	                                 bool skip_if_default) {
 		VmfSerializer serializer(doc, skip_if_null, skip_if_empty, skip_if_default);
 		value.Serialize(serializer);
 		return serializer.GetRootObject();
 	}
 
-	yyvmf_mut_val *GetRootObject() {
+	yyjson_mut_val *GetRootObject() {
 		D_ASSERT(stack.size() == 1); // or we forgot to pop somewhere
 		return stack.front();
 	};

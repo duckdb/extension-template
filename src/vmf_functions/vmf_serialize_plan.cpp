@@ -123,13 +123,13 @@ static void VmfSerializePlanFunction(DataChunk &args, ExpressionState &state, Ve
 
 	UnaryExecutor::Execute<string_t, string_t>(inputs, result, args.size(), [&](string_t input) {
 		auto doc = VMFCommon::CreateDocument(alc);
-		auto result_obj = yyvmf_mut_obj(doc);
-		yyvmf_mut_doc_set_root(doc, result_obj);
+		auto result_obj = yyjson_mut_obj(doc);
+		yyjson_mut_doc_set_root(doc, result_obj);
 
 		try {
 			Parser parser;
 			parser.ParseQuery(input.GetString());
-			auto plans_arr = yyvmf_mut_arr(doc);
+			auto plans_arr = yyjson_mut_arr(doc);
 
 			for (auto &statement : parser.statements) {
 				auto stmt = std::move(statement);
@@ -155,14 +155,14 @@ static void VmfSerializePlanFunction(DataChunk &args, ExpressionState &state, Ve
 
 				auto plan_vmf =
 				    VmfSerializer::Serialize(*plan, doc, info.skip_if_null, info.skip_if_empty, info.skip_if_default);
-				yyvmf_mut_arr_append(plans_arr, plan_vmf);
+				yyjson_mut_arr_append(plans_arr, plan_vmf);
 			}
 
-			yyvmf_mut_obj_add_false(doc, result_obj, "error");
-			yyvmf_mut_obj_add_val(doc, result_obj, "plans", plans_arr);
+			yyjson_mut_obj_add_false(doc, result_obj, "error");
+			yyjson_mut_obj_add_val(doc, result_obj, "plans", plans_arr);
 
 			idx_t len;
-			auto data = yyvmf_mut_val_write_opts(result_obj,
+			auto data = yyjson_mut_val_write_opts(result_obj,
 			                                      info.format ? VMFCommon::WRITE_PRETTY_FLAG : VMFCommon::WRITE_FLAG,
 			                                      alc, reinterpret_cast<size_t *>(&len), nullptr);
 			if (data == nullptr) {
@@ -174,18 +174,18 @@ static void VmfSerializePlanFunction(DataChunk &args, ExpressionState &state, Ve
 
 		} catch (std::exception &ex) {
 			ErrorData error(ex);
-			yyvmf_mut_obj_add_true(doc, result_obj, "error");
+			yyjson_mut_obj_add_true(doc, result_obj, "error");
 			// error type and message
-			yyvmf_mut_obj_add_strcpy(doc, result_obj, "error_type",
+			yyjson_mut_obj_add_strcpy(doc, result_obj, "error_type",
 			                          StringUtil::Lower(Exception::ExceptionTypeToString(error.Type())).c_str());
-			yyvmf_mut_obj_add_strcpy(doc, result_obj, "error_message", error.RawMessage().c_str());
+			yyjson_mut_obj_add_strcpy(doc, result_obj, "error_message", error.RawMessage().c_str());
 			// add extra info
 			for (auto &entry : error.ExtraInfo()) {
-				yyvmf_mut_obj_add_strcpy(doc, result_obj, entry.first.c_str(), entry.second.c_str());
+				yyjson_mut_obj_add_strcpy(doc, result_obj, entry.first.c_str(), entry.second.c_str());
 			}
 
 			idx_t len;
-			auto data = yyvmf_mut_val_write_opts(result_obj,
+			auto data = yyjson_mut_val_write_opts(result_obj,
 			                                      info.format ? VMFCommon::WRITE_PRETTY_FLAG : VMFCommon::WRITE_FLAG,
 			                                      alc, reinterpret_cast<size_t *>(&len), nullptr);
 			return StringVector::AddString(result, data, len);

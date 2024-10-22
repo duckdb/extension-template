@@ -6,46 +6,46 @@ namespace duckdb {
 
 class VmfDeserializer : public Deserializer {
 public:
-	VmfDeserializer(yyvmf_val *val, yyvmf_doc *doc) : doc(doc) {
+	VmfDeserializer(yyjson_val *val, yyjson_doc *doc) : doc(doc) {
 		deserialize_enum_from_string = true;
 		stack.emplace_back(val);
 	}
 	~VmfDeserializer() {
-		yyvmf_doc_free(doc);
+		yyjson_doc_free(doc);
 	}
 
 private:
 	struct StackFrame {
-		yyvmf_val *val;
-		yyvmf_arr_iter arr_iter;
-		explicit StackFrame(yyvmf_val *val) : val(val) {
-			yyvmf_arr_iter_init(val, &arr_iter);
+		yyjson_val *val;
+		yyjson_arr_iter arr_iter;
+		explicit StackFrame(yyjson_val *val) : val(val) {
+			yyjson_arr_iter_init(val, &arr_iter);
 		}
 	};
 
-	yyvmf_doc *doc;
+	yyjson_doc *doc;
 	const char *current_tag = nullptr;
 	vector<StackFrame> stack;
 
 	void DumpDoc();
 	void DumpCurrent();
-	void Dump(yyvmf_mut_val *val);
-	void Dump(yyvmf_val *val);
+	void Dump(yyjson_mut_val *val);
+	void Dump(yyjson_val *val);
 
 	// Get the current vmf value
 	inline StackFrame &Current() {
 		return stack.back();
 	};
 
-	inline void Push(yyvmf_val *val) {
+	inline void Push(yyjson_val *val) {
 		stack.emplace_back(val);
 	}
 	inline void Pop() {
 		stack.pop_back();
 	}
-	yyvmf_val *GetNextValue();
+	yyjson_val *GetNextValue();
 
-	void ThrowTypeError(yyvmf_val *val, const char *expected);
+	void ThrowTypeError(yyjson_val *val, const char *expected);
 
 	//===--------------------------------------------------------------------===//
 	// Nested Types Hooks

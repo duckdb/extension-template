@@ -2,7 +2,7 @@
 
 namespace duckdb {
 
-static inline bool VMFExists(yyvmf_val *val, yyvmf_alc *, Vector &, ValidityMask &, idx_t) {
+static inline bool VMFExists(yyjson_val *val, yyjson_alc *, Vector &, ValidityMask &, idx_t) {
 	return val;
 }
 

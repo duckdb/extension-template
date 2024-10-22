@@ -2,18 +2,18 @@
 
 namespace duckdb {
 
-static inline bool VMFContains(yyvmf_val *haystack, yyvmf_val *needle);
-static inline bool VMFFuzzyEquals(yyvmf_val *haystack, yyvmf_val *needle);
+static inline bool VMFContains(yyjson_val *haystack, yyjson_val *needle);
+static inline bool VMFFuzzyEquals(yyjson_val *haystack, yyjson_val *needle);
 
-static inline bool VMFArrayFuzzyEquals(yyvmf_val *haystack, yyvmf_val *needle) {
-	D_ASSERT(yyvmf_get_tag(haystack) == (YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE) &&
-	         yyvmf_get_tag(needle) == (YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE));
+static inline bool VMFArrayFuzzyEquals(yyjson_val *haystack, yyjson_val *needle) {
+	D_ASSERT(yyjson_get_tag(haystack) == (yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE) &&
+	         yyjson_get_tag(needle) == (yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE));
 
 	size_t needle_idx, needle_max, haystack_idx, haystack_max;
-	yyvmf_val *needle_child, *haystack_child;
-	yyvmf_arr_foreach(needle, needle_idx, needle_max, needle_child) {
+	yyjson_val *needle_child, *haystack_child;
+	yyjson_arr_foreach(needle, needle_idx, needle_max, needle_child) {
 		bool found = false;
-		yyvmf_arr_foreach(haystack, haystack_idx, haystack_max, haystack_child) {
+		yyjson_arr_foreach(haystack, haystack_idx, haystack_max, haystack_child) {
 			if (VMFFuzzyEquals(haystack_child, needle_child)) {
 				found = true;
 				break;
@@ -26,14 +26,14 @@ static inline bool VMFArrayFuzzyEquals(yyvmf_val *haystack, yyvmf_val *needle) {
 	return true;
 }
 
-static inline bool VMFObjectFuzzyEquals(yyvmf_val *haystack, yyvmf_val *needle) {
-	D_ASSERT(yyvmf_get_tag(haystack) == (YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE) &&
-	         yyvmf_get_tag(needle) == (YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE));
+static inline bool VMFObjectFuzzyEquals(yyjson_val *haystack, yyjson_val *needle) {
+	D_ASSERT(yyjson_get_tag(haystack) == (yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE) &&
+	         yyjson_get_tag(needle) == (yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE));
 
 	size_t idx, max;
-	yyvmf_val *key, *needle_child;
-	yyvmf_obj_foreach(needle, idx, max, key, needle_child) {
-		auto haystack_child = yyvmf_obj_getn(haystack, unsafe_yyvmf_get_str(key), unsafe_yyvmf_get_len(key));
+	yyjson_val *key, *needle_child;
+	yyjson_obj_foreach(needle, idx, max, key, needle_child) {
+		auto haystack_child = yyjson_obj_getn(haystack, unsafe_yyjson_get_str(key), unsafe_yyjson_get_len(key));
 		if (!haystack_child || !VMFFuzzyEquals(haystack_child, needle_child)) {
 			return false;
 		}
@@ -41,36 +41,36 @@ static inline bool VMFObjectFuzzyEquals(yyvmf_val *haystack, yyvmf_val *needle) 
 	return true;
 }
 
-static inline bool VMFFuzzyEquals(yyvmf_val *haystack, yyvmf_val *needle) {
+static inline bool VMFFuzzyEquals(yyjson_val *haystack, yyjson_val *needle) {
 	D_ASSERT(haystack && needle);
 
 	// Strict equality
-	if (unsafe_yyvmf_equals(haystack, needle)) {
+	if (unsafe_yyjson_equals(haystack, needle)) {
 		return true;
 	}
 
-	auto haystack_tag = yyvmf_get_tag(needle);
-	if (haystack_tag != yyvmf_get_tag(haystack)) {
+	auto haystack_tag = yyjson_get_tag(needle);
+	if (haystack_tag != yyjson_get_tag(haystack)) {
 		return false;
 	}
 
 	// Fuzzy equality (contained in)
 	switch (haystack_tag) {
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
 		return VMFArrayFuzzyEquals(haystack, needle);
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
 		return VMFObjectFuzzyEquals(haystack, needle);
 	default:
 		return false;
 	}
 }
 
-static inline bool VMFArrayContains(yyvmf_val *haystack_array, yyvmf_val *needle) {
-	D_ASSERT(yyvmf_get_tag(haystack_array) == (YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE));
+static inline bool VMFArrayContains(yyjson_val *haystack_array, yyjson_val *needle) {
+	D_ASSERT(yyjson_get_tag(haystack_array) == (yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE));
 
 	size_t idx, max;
-	yyvmf_val *child_haystack;
-	yyvmf_arr_foreach(haystack_array, idx, max, child_haystack) {
+	yyjson_val *child_haystack;
+	yyjson_arr_foreach(haystack_array, idx, max, child_haystack) {
 		if (VMFContains(child_haystack, needle)) {
 			return true;
 		}
@@ -78,12 +78,12 @@ static inline bool VMFArrayContains(yyvmf_val *haystack_array, yyvmf_val *needle
 	return false;
 }
 
-static inline bool VMFObjectContains(yyvmf_val *haystack_object, yyvmf_val *needle) {
-	D_ASSERT(yyvmf_get_tag(haystack_object) == (YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE));
+static inline bool VMFObjectContains(yyjson_val *haystack_object, yyjson_val *needle) {
+	D_ASSERT(yyjson_get_tag(haystack_object) == (yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE));
 
 	size_t idx, max;
-	yyvmf_val *key, *child_haystack;
-	yyvmf_obj_foreach(haystack_object, idx, max, key, child_haystack) {
+	yyjson_val *key, *child_haystack;
+	yyjson_obj_foreach(haystack_object, idx, max, key, child_haystack) {
 		if (VMFContains(child_haystack, needle)) {
 			return true;
 		}
@@ -91,15 +91,15 @@ static inline bool VMFObjectContains(yyvmf_val *haystack_object, yyvmf_val *need
 	return false;
 }
 
-static inline bool VMFContains(yyvmf_val *haystack, yyvmf_val *needle) {
+static inline bool VMFContains(yyjson_val *haystack, yyjson_val *needle) {
 	if (VMFFuzzyEquals(haystack, needle)) {
 		return true;
 	}
 
-	switch (yyvmf_get_tag(haystack)) {
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
+	switch (yyjson_get_tag(haystack)) {
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
 		return VMFArrayContains(haystack, needle);
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
 		return VMFObjectContains(haystack, needle);
 	default:
 		return false;

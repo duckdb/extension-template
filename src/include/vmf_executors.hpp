@@ -15,7 +15,7 @@
 namespace duckdb {
 
 template <class T>
-using vmf_function_t = std::function<T(yyvmf_val *, yyvmf_alc *, Vector &, ValidityMask &, idx_t)>;
+using vmf_function_t = std::function<T(yyjson_val *, yyjson_alc *, Vector &, ValidityMask &, idx_t)>;
 
 struct VMFExecutors {
 public:
@@ -60,7 +60,7 @@ public:
 				    });
 			} else {
 				D_ASSERT(info.path_type == VMFCommon::VMFPathType::WILDCARD);
-				vector<yyvmf_val *> vals;
+				vector<yyjson_val *> vals;
 				UnaryExecutor::Execute<string_t, list_entry_t>(inputs, result, args.size(), [&](string_t input) {
 					vals.clear();
 
@@ -141,7 +141,7 @@ public:
 		auto &child_validity = FlatVector::Validity(child);
 
 		idx_t offset = 0;
-		yyvmf_val *val;
+		yyjson_val *val;
 		for (idx_t i = 0; i < count; i++) {
 			auto idx = input_data.sel->get_index(i);
 			if (!input_data.validity.RowIsValid(idx)) {

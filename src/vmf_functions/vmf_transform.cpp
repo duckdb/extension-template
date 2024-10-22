@@ -23,45 +23,45 @@ VMFTransformOptions::VMFTransformOptions(bool strict_cast_p, bool error_duplicat
 }
 
 //! Forward declaration for recursion
-static LogicalType StructureStringToType(yyvmf_val *val, ClientContext &context);
+static LogicalType StructureStringToType(yyjson_val *val, ClientContext &context);
 
-static LogicalType StructureStringToTypeArray(yyvmf_val *arr, ClientContext &context) {
-	if (yyvmf_arr_size(arr) != 1) {
+static LogicalType StructureStringToTypeArray(yyjson_val *arr, ClientContext &context) {
+	if (yyjson_arr_size(arr) != 1) {
 		throw BinderException("Too many values in array of VMF structure");
 	}
-	return LogicalType::LIST(StructureStringToType(yyvmf_arr_get_first(arr), context));
+	return LogicalType::LIST(StructureStringToType(yyjson_arr_get_first(arr), context));
 }
 
-static LogicalType StructureToTypeObject(yyvmf_val *obj, ClientContext &context) {
+static LogicalType StructureToTypeObject(yyjson_val *obj, ClientContext &context) {
 	unordered_set<string> names;
 	child_list_t<LogicalType> child_types;
 	size_t idx, max;
-	yyvmf_val *key, *val;
-	yyvmf_obj_foreach(obj, idx, max, key, val) {
-		val = yyvmf_obj_iter_get_val(key);
-		auto key_str = unsafe_yyvmf_get_str(key);
+	yyjson_val *key, *val;
+	yyjson_obj_foreach(obj, idx, max, key, val) {
+		val = yyjson_obj_iter_get_val(key);
+		auto key_str = unsafe_yyjson_get_str(key);
 		if (names.find(key_str) != names.end()) {
 			VMFCommon::ThrowValFormatError("Duplicate keys in object in VMF structure: %s", val);
 		}
 		names.insert(key_str);
 		child_types.emplace_back(key_str, StructureStringToType(val, context));
 	}
-	D_ASSERT(yyvmf_obj_size(obj) == names.size());
+	D_ASSERT(yyjson_obj_size(obj) == names.size());
 	if (child_types.empty()) {
 		throw BinderException("Empty object in VMF structure");
 	}
 	return LogicalType::STRUCT(child_types);
 }
 
-static LogicalType StructureStringToType(yyvmf_val *val, ClientContext &context) {
-	switch (yyvmf_get_tag(val)) {
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
+static LogicalType StructureStringToType(yyjson_val *val, ClientContext &context) {
+	switch (yyjson_get_tag(val)) {
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
 		return StructureStringToTypeArray(val, context);
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
 		return StructureToTypeObject(val, context);
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NOESC:
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NONE:
-		return TransformStringToLogicalType(unsafe_yyvmf_get_str(val), context);
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NOESC:
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NONE:
+		return TransformStringToLogicalType(unsafe_yyjson_get_str(val), context);
 	default:
 		throw BinderException("invalid VMF structure");
 	}
@@ -91,38 +91,38 @@ static unique_ptr<FunctionData> VMFTransformBind(ClientContext &context, ScalarF
 	return make_uniq<VariableReturnBindData>(bound_function.return_type);
 }
 
-static inline string_t GetString(yyvmf_val *val) {
-	return string_t(unsafe_yyvmf_get_str(val), unsafe_yyvmf_get_len(val));
+static inline string_t GetString(yyjson_val *val) {
+	return string_t(unsafe_yyjson_get_str(val), unsafe_yyjson_get_len(val));
 }
 
 template <class T, class OP = TryCast>
-static inline bool GetValueNumerical(yyvmf_val *val, T &result, VMFTransformOptions &options) {
-	D_ASSERT(unsafe_yyvmf_get_tag(val) != (YYVMF_TYPE_NULL | YYVMF_SUBTYPE_NONE));
+static inline bool GetValueNumerical(yyjson_val *val, T &result, VMFTransformOptions &options) {
+	D_ASSERT(unsafe_yyjson_get_tag(val) != (yyjson_TYPE_NULL | yyjson_SUBTYPE_NONE));
 	bool success;
-	switch (unsafe_yyvmf_get_tag(val)) {
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NOESC:
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NONE:
+	switch (unsafe_yyjson_get_tag(val)) {
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NOESC:
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NONE:
 		success = OP::template Operation<string_t, T>(GetString(val), result, options.strict_cast);
 		break;
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
 		success = false;
 		break;
-	case YYVMF_TYPE_BOOL | YYVMF_SUBTYPE_TRUE:
-	case YYVMF_TYPE_BOOL | YYVMF_SUBTYPE_FALSE:
-		success = OP::template Operation<bool, T>(unsafe_yyvmf_get_bool(val), result, options.strict_cast);
+	case yyjson_TYPE_BOOL | yyjson_SUBTYPE_TRUE:
+	case yyjson_TYPE_BOOL | yyjson_SUBTYPE_FALSE:
+		success = OP::template Operation<bool, T>(unsafe_yyjson_get_bool(val), result, options.strict_cast);
 		break;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_UINT:
-		success = OP::template Operation<uint64_t, T>(unsafe_yyvmf_get_uint(val), result, options.strict_cast);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_UINT:
+		success = OP::template Operation<uint64_t, T>(unsafe_yyjson_get_uint(val), result, options.strict_cast);
 		break;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_SINT:
-		success = OP::template Operation<int64_t, T>(unsafe_yyvmf_get_sint(val), result, options.strict_cast);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_SINT:
+		success = OP::template Operation<int64_t, T>(unsafe_yyjson_get_sint(val), result, options.strict_cast);
 		break;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_REAL:
-		success = OP::template Operation<double, T>(unsafe_yyvmf_get_real(val), result, options.strict_cast);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_REAL:
+		success = OP::template Operation<double, T>(unsafe_yyjson_get_real(val), result, options.strict_cast);
 		break;
 	default:
-		throw InternalException("Unknown yyvmf tag in GetValueNumerical");
+		throw InternalException("Unknown yyjson tag in GetValueNumerical");
 	}
 	if (!success && options.strict_cast) {
 		options.error_message =
@@ -132,33 +132,33 @@ static inline bool GetValueNumerical(yyvmf_val *val, T &result, VMFTransformOpti
 }
 
 template <class T, class OP = TryCastToDecimal>
-static inline bool GetValueDecimal(yyvmf_val *val, T &result, uint8_t w, uint8_t s, VMFTransformOptions &options) {
-	D_ASSERT(unsafe_yyvmf_get_tag(val) != (YYVMF_TYPE_NULL | YYVMF_SUBTYPE_NONE));
+static inline bool GetValueDecimal(yyjson_val *val, T &result, uint8_t w, uint8_t s, VMFTransformOptions &options) {
+	D_ASSERT(unsafe_yyjson_get_tag(val) != (yyjson_TYPE_NULL | yyjson_SUBTYPE_NONE));
 	bool success;
-	switch (unsafe_yyvmf_get_tag(val)) {
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NOESC:
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NONE:
+	switch (unsafe_yyjson_get_tag(val)) {
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NOESC:
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NONE:
 		success = OP::template Operation<string_t, T>(GetString(val), result, options.parameters, w, s);
 		break;
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
 		success = false;
 		break;
-	case YYVMF_TYPE_BOOL | YYVMF_SUBTYPE_TRUE:
-	case YYVMF_TYPE_BOOL | YYVMF_SUBTYPE_FALSE:
-		success = OP::template Operation<bool, T>(unsafe_yyvmf_get_bool(val), result, options.parameters, w, s);
+	case yyjson_TYPE_BOOL | yyjson_SUBTYPE_TRUE:
+	case yyjson_TYPE_BOOL | yyjson_SUBTYPE_FALSE:
+		success = OP::template Operation<bool, T>(unsafe_yyjson_get_bool(val), result, options.parameters, w, s);
 		break;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_UINT:
-		success = OP::template Operation<uint64_t, T>(unsafe_yyvmf_get_uint(val), result, options.parameters, w, s);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_UINT:
+		success = OP::template Operation<uint64_t, T>(unsafe_yyjson_get_uint(val), result, options.parameters, w, s);
 		break;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_SINT:
-		success = OP::template Operation<int64_t, T>(unsafe_yyvmf_get_sint(val), result, options.parameters, w, s);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_SINT:
+		success = OP::template Operation<int64_t, T>(unsafe_yyjson_get_sint(val), result, options.parameters, w, s);
 		break;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_REAL:
-		success = OP::template Operation<double, T>(unsafe_yyvmf_get_real(val), result, options.parameters, w, s);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_REAL:
+		success = OP::template Operation<double, T>(unsafe_yyjson_get_real(val), result, options.parameters, w, s);
 		break;
 	default:
-		throw InternalException("Unknown yyvmf tag in GetValueString");
+		throw InternalException("Unknown yyjson tag in GetValueString");
 	}
 	if (!success && options.strict_cast) {
 		options.error_message =
@@ -167,44 +167,44 @@ static inline bool GetValueDecimal(yyvmf_val *val, T &result, uint8_t w, uint8_t
 	return success;
 }
 
-static inline bool GetValueString(yyvmf_val *val, yyvmf_alc *alc, string_t &result, Vector &vector) {
-	D_ASSERT(unsafe_yyvmf_get_tag(val) != (YYVMF_TYPE_NULL | YYVMF_SUBTYPE_NONE));
-	switch (unsafe_yyvmf_get_tag(val)) {
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NOESC:
-	case YYVMF_TYPE_STR | YYVMF_SUBTYPE_NONE:
-		result = string_t(unsafe_yyvmf_get_str(val), unsafe_yyvmf_get_len(val));
+static inline bool GetValueString(yyjson_val *val, yyjson_alc *alc, string_t &result, Vector &vector) {
+	D_ASSERT(unsafe_yyjson_get_tag(val) != (yyjson_TYPE_NULL | yyjson_SUBTYPE_NONE));
+	switch (unsafe_yyjson_get_tag(val)) {
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NOESC:
+	case yyjson_TYPE_STR | yyjson_SUBTYPE_NONE:
+		result = string_t(unsafe_yyjson_get_str(val), unsafe_yyjson_get_len(val));
 		return true;
-	case YYVMF_TYPE_ARR | YYVMF_SUBTYPE_NONE:
-	case YYVMF_TYPE_OBJ | YYVMF_SUBTYPE_NONE:
-		result = VMFCommon::WriteVal<yyvmf_val>(val, alc);
+	case yyjson_TYPE_ARR | yyjson_SUBTYPE_NONE:
+	case yyjson_TYPE_OBJ | yyjson_SUBTYPE_NONE:
+		result = VMFCommon::WriteVal<yyjson_val>(val, alc);
 		return true;
-	case YYVMF_TYPE_BOOL | YYVMF_SUBTYPE_TRUE:
-	case YYVMF_TYPE_BOOL | YYVMF_SUBTYPE_FALSE:
-		result = StringCast::Operation<bool>(unsafe_yyvmf_get_bool(val), vector);
+	case yyjson_TYPE_BOOL | yyjson_SUBTYPE_TRUE:
+	case yyjson_TYPE_BOOL | yyjson_SUBTYPE_FALSE:
+		result = StringCast::Operation<bool>(unsafe_yyjson_get_bool(val), vector);
 		return true;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_UINT:
-		result = StringCast::Operation<uint64_t>(unsafe_yyvmf_get_uint(val), vector);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_UINT:
+		result = StringCast::Operation<uint64_t>(unsafe_yyjson_get_uint(val), vector);
 		return true;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_SINT:
-		result = StringCast::Operation<int64_t>(unsafe_yyvmf_get_sint(val), vector);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_SINT:
+		result = StringCast::Operation<int64_t>(unsafe_yyjson_get_sint(val), vector);
 		return true;
-	case YYVMF_TYPE_NUM | YYVMF_SUBTYPE_REAL:
-		result = StringCast::Operation<double>(unsafe_yyvmf_get_real(val), vector);
+	case yyjson_TYPE_NUM | yyjson_SUBTYPE_REAL:
+		result = StringCast::Operation<double>(unsafe_yyjson_get_real(val), vector);
 		return true;
 	default:
-		throw InternalException("Unknown yyvmf tag in GetValueString");
+		throw InternalException("Unknown yyjson tag in GetValueString");
 	}
 }
 
 template <class T>
-static bool TransformNumerical(yyvmf_val *vals[], Vector &result, const idx_t count, VMFTransformOptions &options) {
+static bool TransformNumerical(yyjson_val *vals[], Vector &result, const idx_t count, VMFTransformOptions &options) {
 	auto data = FlatVector::GetData<T>(result);
 	auto &validity = FlatVector::Validity(result);
 
 	bool success = true;
 	for (idx_t i = 0; i < count; i++) {
 		const auto &val = vals[i];
-		if (!val || unsafe_yyvmf_is_null(val)) {
+		if (!val || unsafe_yyjson_is_null(val)) {
 			validity.SetInvalid(i);
 		} else if (!GetValueNumerical<T>(val, data[i], options)) {
 			validity.SetInvalid(i);
@@ -218,7 +218,7 @@ static bool TransformNumerical(yyvmf_val *vals[], Vector &result, const idx_t co
 }
 
 template <class T>
-static bool TransformDecimal(yyvmf_val *vals[], Vector &result, const idx_t count, uint8_t width, uint8_t scale,
+static bool TransformDecimal(yyjson_val *vals[], Vector &result, const idx_t count, uint8_t width, uint8_t scale,
                              VMFTransformOptions &options) {
 	auto data = FlatVector::GetData<T>(result);
 	auto &validity = FlatVector::Validity(result);
@@ -226,7 +226,7 @@ static bool TransformDecimal(yyvmf_val *vals[], Vector &result, const idx_t coun
 	bool success = true;
 	for (idx_t i = 0; i < count; i++) {
 		const auto &val = vals[i];
-		if (!val || unsafe_yyvmf_is_null(val)) {
+		if (!val || unsafe_yyjson_is_null(val)) {
 			validity.SetInvalid(i);
 		} else if (!GetValueDecimal<T>(val, data[i], width, scale, options)) {
 			validity.SetInvalid(i);
@@ -239,7 +239,7 @@ static bool TransformDecimal(yyvmf_val *vals[], Vector &result, const idx_t coun
 	return success;
 }
 
-bool VMFTransform::GetStringVector(yyvmf_val *vals[], const idx_t count, const LogicalType &target,
+bool VMFTransform::GetStringVector(yyjson_val *vals[], const idx_t count, const LogicalType &target,
                                     Vector &string_vector, VMFTransformOptions &options) {
 	if (count > STANDARD_VECTOR_SIZE) {
 		string_vector.Initialize(false, count);
@@ -251,14 +251,14 @@ bool VMFTransform::GetStringVector(yyvmf_val *vals[], const idx_t count, const L
 	bool success = true;
 	for (idx_t i = 0; i < count; i++) {
 		const auto &val = vals[i];
-		if (!val || unsafe_yyvmf_is_null(val)) {
+		if (!val || unsafe_yyjson_is_null(val)) {
 			validity.SetInvalid(i);
 			continue;
 		}
 
-		if (!unsafe_yyvmf_is_str(val)) {
+		if (!unsafe_yyjson_is_str(val)) {
 			validity.SetInvalid(i);
-			if (success && options.strict_cast && !unsafe_yyvmf_is_str(val)) {
+			if (success && options.strict_cast && !unsafe_yyjson_is_str(val)) {
 				options.error_message = StringUtil::Format("Unable to cast '%s' to " + EnumUtil::ToString(target.id()),
 				                                           VMFCommon::ValToString(val, 50));
 				options.object_index = i;
@@ -272,7 +272,7 @@ bool VMFTransform::GetStringVector(yyvmf_val *vals[], const idx_t count, const L
 	return success;
 }
 
-static bool TransformFromString(yyvmf_val *vals[], Vector &result, const idx_t count, VMFTransformOptions &options) {
+static bool TransformFromString(yyjson_val *vals[], Vector &result, const idx_t count, VMFTransformOptions &options) {
 	Vector string_vector(LogicalTypeId::VARCHAR, count);
 
 	bool success = true;
@@ -314,7 +314,7 @@ static bool TransformStringWithFormat(Vector &string_vector, StrpTimeFormat &for
 	return success;
 }
 
-static bool TransformFromStringWithFormat(yyvmf_val *vals[], Vector &result, const idx_t count,
+static bool TransformFromStringWithFormat(yyjson_val *vals[], Vector &result, const idx_t count,
                                           VMFTransformOptions &options) {
 	Vector string_vector(LogicalTypeId::VARCHAR, count);
 	bool success = true;
@@ -342,12 +342,12 @@ static bool TransformFromStringWithFormat(yyvmf_val *vals[], Vector &result, con
 	return success;
 }
 
-static bool TransformToString(yyvmf_val *vals[], yyvmf_alc *alc, Vector &result, const idx_t count) {
+static bool TransformToString(yyjson_val *vals[], yyjson_alc *alc, Vector &result, const idx_t count) {
 	auto data = FlatVector::GetData<string_t>(result);
 	auto &validity = FlatVector::Validity(result);
 	for (idx_t i = 0; i < count; i++) {
 		const auto &val = vals[i];
-		if (!val || unsafe_yyvmf_is_null(vals[i])) {
+		if (!val || unsafe_yyjson_is_null(vals[i])) {
 			validity.SetInvalid(i);
 		} else if (!GetValueString(val, alc, data[i], result)) {
 			validity.SetInvalid(i);
@@ -357,7 +357,7 @@ static bool TransformToString(yyvmf_val *vals[], yyvmf_alc *alc, Vector &result,
 	return true;
 }
 
-bool VMFTransform::TransformObject(yyvmf_val *objects[], yyvmf_alc *alc, const idx_t count,
+bool VMFTransform::TransformObject(yyjson_val *objects[], yyjson_alc *alc, const idx_t count,
                                     const vector<string> &names, const vector<Vector *> &result_vectors,
                                     VMFTransformOptions &options) {
 	D_ASSERT(alc);
@@ -366,11 +366,11 @@ bool VMFTransform::TransformObject(yyvmf_val *objects[], yyvmf_alc *alc, const i
 
 	// Build hash map from key to column index so we don't have to linearly search using the key
 	vmf_key_map_t<idx_t> key_map;
-	vector<yyvmf_val **> nested_vals;
+	vector<yyjson_val **> nested_vals;
 	nested_vals.reserve(column_count);
 	for (idx_t col_idx = 0; col_idx < column_count; col_idx++) {
 		key_map.insert({{names[col_idx].c_str(), names[col_idx].length()}, col_idx});
-		nested_vals.push_back(VMFCommon::AllocateArray<yyvmf_val *>(alc, count));
+		nested_vals.push_back(VMFCommon::AllocateArray<yyjson_val *>(alc, count));
 	}
 
 	idx_t found_key_count;
@@ -379,10 +379,10 @@ bool VMFTransform::TransformObject(yyvmf_val *objects[], yyvmf_alc *alc, const i
 	bool success = true;
 
 	size_t idx, max;
-	yyvmf_val *key, *val;
+	yyjson_val *key, *val;
 	for (idx_t i = 0; i < count; i++) {
 		const auto &obj = objects[i];
-		if (!obj || unsafe_yyvmf_is_null(obj)) {
+		if (!obj || unsafe_yyjson_is_null(obj)) {
 			// Set nested val to null so the recursion doesn't break
 			for (idx_t col_idx = 0; col_idx < column_count; col_idx++) {
 				nested_vals[col_idx][i] = nullptr;
@@ -390,7 +390,7 @@ bool VMFTransform::TransformObject(yyvmf_val *objects[], yyvmf_alc *alc, const i
 			continue;
 		}
 
-		if (!unsafe_yyvmf_is_obj(obj)) {
+		if (!unsafe_yyjson_is_obj(obj)) {
 			// Set nested val to null so the recursion doesn't break
 			for (idx_t col_idx = 0; col_idx < column_count; col_idx++) {
 				nested_vals[col_idx][i] = nullptr;
@@ -407,9 +407,9 @@ bool VMFTransform::TransformObject(yyvmf_val *objects[], yyvmf_alc *alc, const i
 
 		found_key_count = 0;
 		memset(found_keys, false, column_count);
-		yyvmf_obj_foreach(objects[i], idx, max, key, val) {
-			auto key_ptr = unsafe_yyvmf_get_str(key);
-			auto key_len = unsafe_yyvmf_get_len(key);
+		yyjson_obj_foreach(objects[i], idx, max, key, val) {
+			auto key_ptr = unsafe_yyjson_get_str(key);
+			auto key_len = unsafe_yyjson_get_len(key);
 			auto it = key_map.find({key_ptr, key_len});
 			if (it != key_map.end()) {
 				const auto &col_idx = it->second;
@@ -467,13 +467,13 @@ bool VMFTransform::TransformObject(yyvmf_val *objects[], yyvmf_alc *alc, const i
 	return success;
 }
 
-static bool TransformObjectInternal(yyvmf_val *objects[], yyvmf_alc *alc, Vector &result, const idx_t count,
+static bool TransformObjectInternal(yyjson_val *objects[], yyjson_alc *alc, Vector &result, const idx_t count,
                                     VMFTransformOptions &options) {
 	// Set validity first
 	auto &result_validity = FlatVector::Validity(result);
 	for (idx_t i = 0; i < count; i++) {
 		const auto &obj = objects[i];
-		if (!obj || unsafe_yyvmf_is_null(obj)) {
+		if (!obj || unsafe_yyjson_is_null(obj)) {
 			result_validity.SetInvalid(i);
 		}
 	}
@@ -492,7 +492,7 @@ static bool TransformObjectInternal(yyvmf_val *objects[], yyvmf_alc *alc, Vector
 	return VMFTransform::TransformObject(objects, alc, count, child_names, child_vectors, options);
 }
 
-static bool TransformArrayToList(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &result, const idx_t count,
+static bool TransformArrayToList(yyjson_val *arrays[], yyjson_alc *alc, Vector &result, const idx_t count,
                                  VMFTransformOptions &options) {
 	bool success = true;
 
@@ -502,12 +502,12 @@ static bool TransformArrayToList(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &re
 	idx_t offset = 0;
 	for (idx_t i = 0; i < count; i++) {
 		const auto &arr = arrays[i];
-		if (!arr || unsafe_yyvmf_is_null(arr)) {
+		if (!arr || unsafe_yyjson_is_null(arr)) {
 			list_validity.SetInvalid(i);
 			continue;
 		}
 
-		if (!unsafe_yyvmf_is_arr(arr)) {
+		if (!unsafe_yyjson_is_arr(arr)) {
 			list_validity.SetInvalid(i);
 			if (success && options.strict_cast) {
 				options.error_message =
@@ -521,24 +521,24 @@ static bool TransformArrayToList(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &re
 
 		auto &entry = list_entries[i];
 		entry.offset = offset;
-		entry.length = unsafe_yyvmf_get_len(arr);
+		entry.length = unsafe_yyjson_get_len(arr);
 		offset += entry.length;
 	}
 	ListVector::SetListSize(result, offset);
 	ListVector::Reserve(result, offset);
 
 	// Initialize array for the nested values
-	auto nested_vals = VMFCommon::AllocateArray<yyvmf_val *>(alc, offset);
+	auto nested_vals = VMFCommon::AllocateArray<yyjson_val *>(alc, offset);
 
 	// Get array values
 	size_t idx, max;
-	yyvmf_val *val;
+	yyjson_val *val;
 	idx_t list_i = 0;
 	for (idx_t i = 0; i < count; i++) {
 		if (!list_validity.RowIsValid(i)) {
 			continue; // We already marked this as invalid
 		}
-		yyvmf_arr_foreach(arrays[i], idx, max, val) {
+		yyjson_arr_foreach(arrays[i], idx, max, val) {
 			nested_vals[list_i] = val;
 			list_i++;
 		}
@@ -570,7 +570,7 @@ static bool TransformArrayToList(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &re
 	return success;
 }
 
-static bool TransformArrayToArray(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &result, const idx_t count,
+static bool TransformArrayToArray(yyjson_val *arrays[], yyjson_alc *alc, Vector &result, const idx_t count,
                                   VMFTransformOptions &options) {
 	bool success = true;
 
@@ -581,12 +581,12 @@ static bool TransformArrayToArray(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &r
 
 	for (idx_t i = 0; i < count; i++) {
 		const auto &arr = arrays[i];
-		if (!arr || unsafe_yyvmf_is_null(arr)) {
+		if (!arr || unsafe_yyjson_is_null(arr)) {
 			result_validity.SetInvalid(i);
 			continue;
 		}
 
-		if (!unsafe_yyvmf_is_arr(arr)) {
+		if (!unsafe_yyjson_is_arr(arr)) {
 			result_validity.SetInvalid(i);
 			if (success && options.strict_cast) {
 				options.error_message =
@@ -598,7 +598,7 @@ static bool TransformArrayToArray(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &r
 			continue;
 		}
 
-		auto vmf_arr_size = unsafe_yyvmf_get_len(arr);
+		auto vmf_arr_size = unsafe_yyjson_get_len(arr);
 		if (vmf_arr_size != array_size) {
 			result_validity.SetInvalid(i);
 			if (success && options.strict_cast) {
@@ -613,11 +613,11 @@ static bool TransformArrayToArray(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &r
 	}
 
 	// Initialize array for the nested values
-	auto nested_vals = VMFCommon::AllocateArray<yyvmf_val *>(alc, child_count);
+	auto nested_vals = VMFCommon::AllocateArray<yyjson_val *>(alc, child_count);
 
 	// Get array values
 	size_t idx, max;
-	yyvmf_val *val;
+	yyjson_val *val;
 	idx_t nested_elem_idx = 0;
 	for (idx_t i = 0; i < count; i++) {
 		if (!result_validity.RowIsValid(i)) {
@@ -628,7 +628,7 @@ static bool TransformArrayToArray(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &r
 				nested_elem_idx++;
 			};
 		} else {
-			yyvmf_arr_foreach(arrays[i], idx, max, val) {
+			yyjson_arr_foreach(arrays[i], idx, max, val) {
 				nested_vals[nested_elem_idx] = val;
 				nested_elem_idx++;
 			}
@@ -660,16 +660,16 @@ static bool TransformArrayToArray(yyvmf_val *arrays[], yyvmf_alc *alc, Vector &r
 	return success;
 }
 
-static bool TransformObjectToMap(yyvmf_val *objects[], yyvmf_alc *alc, Vector &result, const idx_t count,
+static bool TransformObjectToMap(yyjson_val *objects[], yyjson_alc *alc, Vector &result, const idx_t count,
                                  VMFTransformOptions &options) {
 	// Pre-allocate list vector
 	idx_t list_size = 0;
 	for (idx_t i = 0; i < count; i++) {
 		const auto &obj = objects[i];
-		if (!obj || !unsafe_yyvmf_is_obj(obj)) {
+		if (!obj || !unsafe_yyjson_is_obj(obj)) {
 			continue;
 		}
-		list_size += unsafe_yyvmf_get_len(obj);
+		list_size += unsafe_yyjson_get_len(obj);
 	}
 	ListVector::Reserve(result, list_size);
 	ListVector::SetListSize(result, list_size);
@@ -677,24 +677,24 @@ static bool TransformObjectToMap(yyvmf_val *objects[], yyvmf_alc *alc, Vector &r
 	auto list_entries = FlatVector::GetData<list_entry_t>(result);
 	auto &list_validity = FlatVector::Validity(result);
 
-	auto keys = VMFCommon::AllocateArray<yyvmf_val *>(alc, list_size);
-	auto vals = VMFCommon::AllocateArray<yyvmf_val *>(alc, list_size);
+	auto keys = VMFCommon::AllocateArray<yyjson_val *>(alc, list_size);
+	auto vals = VMFCommon::AllocateArray<yyjson_val *>(alc, list_size);
 
 	bool success = true;
 	idx_t list_offset = 0;
 
 	size_t idx, max;
-	yyvmf_val *key, *val;
+	yyjson_val *key, *val;
 	for (idx_t i = 0; i < count; i++) {
 		const auto &obj = objects[i];
-		if (!obj || unsafe_yyvmf_is_null(obj)) {
+		if (!obj || unsafe_yyjson_is_null(obj)) {
 			list_validity.SetInvalid(i);
 			continue;
 		}
 
-		if (!unsafe_yyvmf_is_obj(obj)) {
+		if (!unsafe_yyjson_is_obj(obj)) {
 			list_validity.SetInvalid(i);
-			if (success && options.strict_cast && !unsafe_yyvmf_is_obj(obj)) {
+			if (success && options.strict_cast && !unsafe_yyjson_is_obj(obj)) {
 				options.error_message =
 				    StringUtil::Format("Expected OBJECT, but got %s: %s", VMFCommon::ValTypeToString(obj),
 				                       VMFCommon::ValToString(obj, 50));
@@ -706,9 +706,9 @@ static bool TransformObjectToMap(yyvmf_val *objects[], yyvmf_alc *alc, Vector &r
 
 		auto &list_entry = list_entries[i];
 		list_entry.offset = list_offset;
-		list_entry.length = unsafe_yyvmf_get_len(obj);
+		list_entry.length = unsafe_yyjson_get_len(obj);
 
-		yyvmf_obj_foreach(obj, idx, max, key, val) {
+		yyjson_obj_foreach(obj, idx, max, key, val) {
 			keys[list_offset] = key;
 			vals[list_offset] = val;
 			list_offset++;
@@ -734,12 +734,12 @@ static bool TransformObjectToMap(yyvmf_val *objects[], yyvmf_alc *alc, Vector &r
 	return success;
 }
 
-bool TransformToVMF(yyvmf_val *vals[], yyvmf_alc *alc, Vector &result, const idx_t count) {
+bool TransformToVMF(yyjson_val *vals[], yyjson_alc *alc, Vector &result, const idx_t count) {
 	auto data = FlatVector::GetData<string_t>(result);
 	auto &validity = FlatVector::Validity(result);
 	for (idx_t i = 0; i < count; i++) {
 		const auto &val = vals[i];
-		if (!val || unsafe_yyvmf_is_null(val)) {
+		if (!val || unsafe_yyjson_is_null(val)) {
 			validity.SetInvalid(i);
 		} else {
 			data[i] = VMFCommon::WriteVal(val, alc);
@@ -749,7 +749,7 @@ bool TransformToVMF(yyvmf_val *vals[], yyvmf_alc *alc, Vector &result, const idx
 	return true;
 }
 
-bool TransformValueIntoUnion(yyvmf_val **vals, yyvmf_alc *alc, Vector &result, const idx_t count,
+bool TransformValueIntoUnion(yyjson_val **vals, yyjson_alc *alc, Vector &result, const idx_t count,
                              VMFTransformOptions &options) {
 	auto type = result.GetType();
 
@@ -776,19 +776,19 @@ bool TransformValueIntoUnion(yyvmf_val **vals, yyvmf_alc *alc, Vector &result, c
 	for (idx_t i = 0; i < count; i++) {
 		const auto &obj = vals[i];
 
-		if (!obj || unsafe_yyvmf_is_null(vals[i])) {
+		if (!obj || unsafe_yyjson_is_null(vals[i])) {
 			validity.SetInvalid(i);
 			result.SetValue(i, Value(nullptr));
 			continue;
 		}
 
-		if (!unsafe_yyvmf_is_obj(obj)) {
+		if (!unsafe_yyjson_is_obj(obj)) {
 			set_error(i,
-			          StringUtil::Format("Expected an object representing a union, got %s", yyvmf_get_type_desc(obj)));
+			          StringUtil::Format("Expected an object representing a union, got %s", yyjson_get_type_desc(obj)));
 			continue;
 		}
 
-		auto len = unsafe_yyvmf_get_len(obj);
+		auto len = unsafe_yyjson_get_len(obj);
 		if (len > 1) {
 			set_error(i, "Found object containing more than one key, instead of union");
 			continue;
@@ -797,13 +797,13 @@ bool TransformValueIntoUnion(yyvmf_val **vals, yyvmf_alc *alc, Vector &result, c
 			continue;
 		}
 
-		auto key = unsafe_yyvmf_get_first(obj);
-		auto val = yyvmf_obj_iter_get_val(key);
+		auto key = unsafe_yyjson_get_first(obj);
+		auto val = yyjson_obj_iter_get_val(key);
 
-		auto tag = std::find(names.begin(), names.end(), unsafe_yyvmf_get_str(key));
+		auto tag = std::find(names.begin(), names.end(), unsafe_yyjson_get_str(key));
 		if (tag == names.end()) {
 			set_error(i, StringUtil::Format("Found object containing unknown key, instead of union: %s",
-			                                unsafe_yyvmf_get_str(key)));
+			                                unsafe_yyjson_get_str(key)));
 			continue;
 		}
 
@@ -820,7 +820,7 @@ bool TransformValueIntoUnion(yyvmf_val **vals, yyvmf_alc *alc, Vector &result, c
 	return success;
 }
 
-bool VMFTransform::Transform(yyvmf_val *vals[], yyvmf_alc *alc, Vector &result, const idx_t count,
+bool VMFTransform::Transform(yyjson_val *vals[], yyjson_alc *alc, Vector &result, const idx_t count,
                               VMFTransformOptions &options) {
 	auto result_type = result.GetType();
 	if ((result_type == LogicalTypeId::TIMESTAMP || result_type == LogicalTypeId::DATE) && options.date_format_map &&
@@ -910,15 +910,15 @@ bool VMFTransform::Transform(yyvmf_val *vals[], yyvmf_alc *alc, Vector &result, 
 	}
 }
 
-static bool TransformFunctionInternal(Vector &input, const idx_t count, Vector &result, yyvmf_alc *alc,
+static bool TransformFunctionInternal(Vector &input, const idx_t count, Vector &result, yyjson_alc *alc,
                                       VMFTransformOptions &options) {
 	UnifiedVectorFormat input_data;
 	input.ToUnifiedFormat(count, input_data);
 	auto inputs = UnifiedVectorFormat::GetData<string_t>(input_data);
 
 	// Read documents
-	auto docs = VMFCommon::AllocateArray<yyvmf_doc *>(alc, count);
-	auto vals = VMFCommon::AllocateArray<yyvmf_val *>(alc, count);
+	auto docs = VMFCommon::AllocateArray<yyjson_doc *>(alc, count);
+	auto vals = VMFCommon::AllocateArray<yyjson_val *>(alc, count);
 	auto &result_validity = FlatVector::Validity(result);
 	for (idx_t i = 0; i < count; i++) {
 		auto idx = input_data.sel->get_index(i);

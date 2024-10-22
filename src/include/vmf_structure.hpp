@@ -20,7 +20,7 @@ struct VMFStructureNode {
 public:
 	VMFStructureNode();
 	VMFStructureNode(const char *key_ptr, const size_t key_len);
-	VMFStructureNode(yyvmf_val *key_p, yyvmf_val *val_p, bool ignore_errors);
+	VMFStructureNode(yyjson_val *key_p, yyjson_val *val_p, bool ignore_errors);
 
 	//! Disable copy constructors
 	VMFStructureNode(const VMFStructureNode &other) = delete;
@@ -33,15 +33,15 @@ public:
 
 	bool ContainsVarchar() const;
 	void InitializeCandidateTypes(idx_t max_depth, bool convert_strings_to_integers, idx_t depth = 0);
-	void RefineCandidateTypes(yyvmf_val *vals[], idx_t val_count, Vector &string_vector, ArenaAllocator &allocator,
+	void RefineCandidateTypes(yyjson_val *vals[], idx_t val_count, Vector &string_vector, ArenaAllocator &allocator,
 	                          DateFormatMap &date_format_map);
 
 private:
-	void RefineCandidateTypesArray(yyvmf_val *vals[], idx_t val_count, Vector &string_vector,
+	void RefineCandidateTypesArray(yyjson_val *vals[], idx_t val_count, Vector &string_vector,
 	                               ArenaAllocator &allocator, DateFormatMap &date_format_map);
-	void RefineCandidateTypesObject(yyvmf_val *vals[], idx_t val_count, Vector &string_vector,
+	void RefineCandidateTypesObject(yyjson_val *vals[], idx_t val_count, Vector &string_vector,
 	                                ArenaAllocator &allocator, DateFormatMap &date_format_map);
-	void RefineCandidateTypesString(yyvmf_val *vals[], idx_t val_count, Vector &string_vector,
+	void RefineCandidateTypesString(yyjson_val *vals[], idx_t val_count, Vector &string_vector,
 	                                DateFormatMap &date_format_map);
 	void EliminateCandidateTypes(idx_t vec_count, Vector &string_vector, DateFormatMap &date_format_map);
 	bool EliminateCandidateFormats(idx_t vec_count, Vector &string_vector, const Vector &result_vector,
@@ -67,7 +67,7 @@ public:
 
 	VMFStructureNode &GetOrCreateChild();
 	VMFStructureNode &GetOrCreateChild(const char *key_ptr, size_t key_size);
-	VMFStructureNode &GetOrCreateChild(yyvmf_val *key, yyvmf_val *val, bool ignore_errors);
+	VMFStructureNode &GetOrCreateChild(yyjson_val *key, yyjson_val *val, bool ignore_errors);
 
 public:
 	//! Type of this description
@@ -83,7 +83,7 @@ public:
 
 struct VMFStructure {
 public:
-	static void ExtractStructure(yyvmf_val *val, VMFStructureNode &node, bool ignore_errors);
+	static void ExtractStructure(yyjson_val *val, VMFStructureNode &node, bool ignore_errors);
 	static LogicalType StructureToType(ClientContext &context, const VMFStructureNode &node, idx_t max_depth,
 	                                   double field_appearance_threshold, idx_t map_inference_threshold,
 	                                   idx_t depth = 0, const LogicalType &null_type = LogicalType::VMF());

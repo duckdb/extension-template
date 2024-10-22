@@ -63,11 +63,11 @@ struct TryParseTimeStamp {
 };
 
 struct VMFTransform {
-	static bool Transform(yyvmf_val *vals[], yyvmf_alc *alc, Vector &result, const idx_t count,
+	static bool Transform(yyjson_val *vals[], yyjson_alc *alc, Vector &result, const idx_t count,
 	                      VMFTransformOptions &options);
-	static bool TransformObject(yyvmf_val *objects[], yyvmf_alc *alc, const idx_t count, const vector<string> &names,
+	static bool TransformObject(yyjson_val *objects[], yyjson_alc *alc, const idx_t count, const vector<string> &names,
 	                            const vector<Vector *> &result_vectors, VMFTransformOptions &options);
-	static bool GetStringVector(yyvmf_val *vals[], const idx_t count, const LogicalType &target, Vector &string_vector,
+	static bool GetStringVector(yyjson_val *vals[], const idx_t count, const LogicalType &target, Vector &string_vector,
 	                            VMFTransformOptions &options);
 };
 

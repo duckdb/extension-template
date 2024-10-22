@@ -207,14 +207,14 @@ public:
 	idx_t ReadNext(VMFScanGlobalState &gstate);
 	void ThrowTransformError(idx_t object_index, const string &error_message);
 
-	yyvmf_alc *GetAllocator();
+	yyjson_alc *GetAllocator();
 	const MultiFileReaderData &GetReaderData() const;
 
 public:
 	//! Current scan data
 	idx_t scan_count;
 	VMFString units[STANDARD_VECTOR_SIZE];
-	yyvmf_val *values[STANDARD_VECTOR_SIZE];
+	yyjson_val *values[STANDARD_VECTOR_SIZE];
 
 	//! Batch index for order-preserving parallelism
 	idx_t batch_index;

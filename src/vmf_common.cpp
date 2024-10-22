@@ -6,10 +6,10 @@ namespace duckdb {
 
 using VMFPathType = VMFCommon::VMFPathType;
 
-string VMFCommon::ValToString(yyvmf_val *val, idx_t max_len) {
+string VMFCommon::ValToString(yyjson_val *val, idx_t max_len) {
 	VMFAllocator vmf_allocator(Allocator::DefaultAllocator());
 	idx_t len;
-	auto data = VMFCommon::WriteVal<yyvmf_val>(val, vmf_allocator.GetYYAlc(), len);
+	auto data = VMFCommon::WriteVal<yyjson_val>(val, vmf_allocator.GetYYAlc(), len);
 	if (max_len < len) {
 		return string(data, max_len) + "...";
 	} else {
@@ -17,7 +17,7 @@ string VMFCommon::ValToString(yyvmf_val *val, idx_t max_len) {
 	}
 }
 
-void VMFCommon::ThrowValFormatError(string error_string, yyvmf_val *val) {
+void VMFCommon::ThrowValFormatError(string error_string, yyjson_val *val) {
 	error_string = StringUtil::Format(error_string, VMFCommon::ValToString(val));
 	throw InvalidInputException(error_string);
 }
@@ -249,7 +249,7 @@ VMFPathType VMFCommon::ValidatePath(const char *ptr, const idx_t &len, const boo
 	return path_type;
 }
 
-yyvmf_val *VMFCommon::GetPath(yyvmf_val *val, const char *ptr, const idx_t &len) {
+yyjson_val *VMFCommon::GetPath(yyjson_val *val, const char *ptr, const idx_t &len) {
 	// Path has been validated at this point
 	const char *const end = ptr + len;
 	ptr++; // Skip past '$'
@@ -258,17 +258,17 @@ yyvmf_val *VMFCommon::GetPath(yyvmf_val *val, const char *ptr, const idx_t &len)
 		D_ASSERT(ptr != end);
 		switch (c) {
 		case '.': { // Object field
-			if (!unsafe_yyvmf_is_obj(val)) {
+			if (!unsafe_yyjson_is_obj(val)) {
 				return nullptr;
 			}
 			auto key_result = ReadKey(ptr, end);
 			D_ASSERT(key_result.IsValid());
 			ptr += key_result.chars_read;
-			val = yyvmf_obj_getn(val, key_result.key.c_str(), key_result.key.size());
+			val = yyjson_obj_getn(val, key_result.key.c_str(), key_result.key.size());
 			break;
 		}
 		case '[': { // Array index
-			if (!unsafe_yyvmf_is_arr(val)) {
+			if (!unsafe_yyjson_is_arr(val)) {
 				return nullptr;
 			}
 			idx_t array_index;
@@ -281,9 +281,9 @@ yyvmf_val *VMFCommon::GetPath(yyvmf_val *val, const char *ptr, const idx_t &len)
 			D_ASSERT(success);
 #endif
 			if (from_back && array_index != 0) {
-				array_index = unsafe_yyvmf_get_len(val) - array_index;
+				array_index = unsafe_yyjson_get_len(val) - array_index;
 			}
-			val = yyvmf_arr_get(val, array_index);
+			val = yyjson_arr_get(val, array_index);
 			break;
 		}
 		default: // LCOV_EXCL_START
@@ -294,7 +294,7 @@ yyvmf_val *VMFCommon::GetPath(yyvmf_val *val, const char *ptr, const idx_t &len)
 	return val;
 }
 
-void GetWildcardPathInternal(yyvmf_val *val, const char *ptr, const char *const end, vector<yyvmf_val *> &vals) {
+void GetWildcardPathInternal(yyjson_val *val, const char *ptr, const char *const end, vector<yyjson_val *> &vals) {
 	while (val != nullptr && ptr != end) {
 		const auto &c = *ptr++;
 		D_ASSERT(ptr != end);
@@ -306,20 +306,20 @@ void GetWildcardPathInternal(yyvmf_val *val, const char *ptr, const char *const 
 				if (key_result.IsWildCard()) {
 					ptr += key_result.chars_read;
 				}
-				vector<yyvmf_val *> rec_vals;
+				vector<yyjson_val *> rec_vals;
 				rec_vals.emplace_back(val);
 				for (idx_t i = 0; i < rec_vals.size(); i++) {
-					yyvmf_val *rec_val = rec_vals[i];
-					if (yyvmf_is_arr(rec_val)) {
+					yyjson_val *rec_val = rec_vals[i];
+					if (yyjson_is_arr(rec_val)) {
 						size_t idx, max;
-						yyvmf_val *element;
-						yyvmf_arr_foreach(rec_val, idx, max, element) {
+						yyjson_val *element;
+						yyjson_arr_foreach(rec_val, idx, max, element) {
 							rec_vals.emplace_back(element);
 						}
-					} else if (yyvmf_is_obj(rec_val)) {
+					} else if (yyjson_is_obj(rec_val)) {
 						size_t idx, max;
-						yyvmf_val *key, *element;
-						yyvmf_obj_foreach(rec_val, idx, max, key, element) {
+						yyjson_val *key, *element;
+						yyjson_obj_foreach(rec_val, idx, max, key, element) {
 							rec_vals.emplace_back(element);
 						}
 					}
@@ -330,22 +330,22 @@ void GetWildcardPathInternal(yyvmf_val *val, const char *ptr, const char *const 
 				return;
 			}
 			ptr += key_result.chars_read;
-			if (!unsafe_yyvmf_is_obj(val)) {
+			if (!unsafe_yyjson_is_obj(val)) {
 				return;
 			}
 			if (key_result.IsWildCard()) { // Wildcard
 				size_t idx, max;
-				yyvmf_val *key, *obj_val;
-				yyvmf_obj_foreach(val, idx, max, key, obj_val) {
+				yyjson_val *key, *obj_val;
+				yyjson_obj_foreach(val, idx, max, key, obj_val) {
 					GetWildcardPathInternal(obj_val, ptr, end, vals);
 				}
 				return;
 			}
-			val = yyvmf_obj_getn(val, key_result.key.c_str(), key_result.key.size());
+			val = yyjson_obj_getn(val, key_result.key.c_str(), key_result.key.size());
 			break;
 		}
 		case '[': { // Array index
-			if (!unsafe_yyvmf_is_arr(val)) {
+			if (!unsafe_yyjson_is_arr(val)) {
 				return;
 			}
 			idx_t array_index;
@@ -360,16 +360,16 @@ void GetWildcardPathInternal(yyvmf_val *val, const char *ptr, const char *const 
 
 			if (array_index == DConstants::INVALID_INDEX) { // Wildcard
 				size_t idx, max;
-				yyvmf_val *arr_val;
-				yyvmf_arr_foreach(val, idx, max, arr_val) {
+				yyjson_val *arr_val;
+				yyjson_arr_foreach(val, idx, max, arr_val) {
 					GetWildcardPathInternal(arr_val, ptr, end, vals);
 				}
 				return;
 			}
 			if (from_back && array_index != 0) {
-				array_index = unsafe_yyvmf_get_len(val) - array_index;
+				array_index = unsafe_yyjson_get_len(val) - array_index;
 			}
-			val = yyvmf_arr_get(val, array_index);
+			val = yyjson_arr_get(val, array_index);
 			break;
 		}
 		default: // LCOV_EXCL_START
@@ -383,7 +383,7 @@ void GetWildcardPathInternal(yyvmf_val *val, const char *ptr, const char *const 
 	return;
 }
 
-void VMFCommon::GetWildcardPath(yyvmf_val *val, const char *ptr, const idx_t &len, vector<yyvmf_val *> &vals) {
+void VMFCommon::GetWildcardPath(yyjson_val *val, const char *ptr, const idx_t &len, vector<yyjson_val *> &vals) {
 	// Path has been validated at this point
 	const char *const end = ptr + len;
 	ptr++; // Skip past '$'

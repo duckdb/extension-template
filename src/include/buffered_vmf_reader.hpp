@@ -133,7 +133,7 @@ public:
 	//! Set line count for a buffer that is done (grabs the lock)
 	void SetBufferLineOrObjectCount(VMFBufferHandle &handle, idx_t count);
 	//! Throws a parse error that mentions the file name and line number
-	void ThrowParseError(idx_t buf_index, idx_t line_or_object_in_buf, yyvmf_read_err &err, const string &extra = "");
+	void ThrowParseError(idx_t buf_index, idx_t line_or_object_in_buf, yyjson_read_err &err, const string &extra = "");
 	//! Throws a transform error that mentions the file name and line number
 	void ThrowTransformError(idx_t buf_index, idx_t line_or_object_in_buf, const string &error_message);
 

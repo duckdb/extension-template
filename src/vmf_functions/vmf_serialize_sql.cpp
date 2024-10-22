@@ -91,14 +91,14 @@ static void VmfSerializeFunction(DataChunk &args, ExpressionState &state, Vector
 
 	UnaryExecutor::Execute<string_t, string_t>(inputs, result, args.size(), [&](string_t input) {
 		auto doc = VMFCommon::CreateDocument(alc);
-		auto result_obj = yyvmf_mut_obj(doc);
-		yyvmf_mut_doc_set_root(doc, result_obj);
+		auto result_obj = yyjson_mut_obj(doc);
+		yyjson_mut_doc_set_root(doc, result_obj);
 
 		try {
 			auto parser = Parser();
 			parser.ParseQuery(input.GetString());
 
-			auto statements_arr = yyvmf_mut_arr(doc);
+			auto statements_arr = yyjson_mut_arr(doc);
 
 			for (auto &statement : parser.statements) {
 				if (statement->type != StatementType::SELECT_STATEMENT) {
@@ -108,13 +108,13 @@ static void VmfSerializeFunction(DataChunk &args, ExpressionState &state, Vector
 				auto vmf =
 				    VmfSerializer::Serialize(select, doc, info.skip_if_null, info.skip_if_empty, info.skip_if_default);
 
-				yyvmf_mut_arr_append(statements_arr, vmf);
+				yyjson_mut_arr_append(statements_arr, vmf);
 			}
 
-			yyvmf_mut_obj_add_false(doc, result_obj, "error");
-			yyvmf_mut_obj_add_val(doc, result_obj, "statements", statements_arr);
+			yyjson_mut_obj_add_false(doc, result_obj, "error");
+			yyjson_mut_obj_add_val(doc, result_obj, "statements", statements_arr);
 			idx_t len;
-			auto data = yyvmf_mut_val_write_opts(result_obj,
+			auto data = yyjson_mut_val_write_opts(result_obj,
 			                                      info.format ? VMFCommon::WRITE_PRETTY_FLAG : VMFCommon::WRITE_FLAG,
 			                                      alc, reinterpret_cast<size_t *>(&len), nullptr);
 			if (data == nullptr) {
@@ -125,17 +125,17 @@ static void VmfSerializeFunction(DataChunk &args, ExpressionState &state, Vector
 
 		} catch (std::exception &ex) {
 			ErrorData error(ex);
-			yyvmf_mut_obj_add_true(doc, result_obj, "error");
-			yyvmf_mut_obj_add_strcpy(doc, result_obj, "error_type",
+			yyjson_mut_obj_add_true(doc, result_obj, "error");
+			yyjson_mut_obj_add_strcpy(doc, result_obj, "error_type",
 			                          StringUtil::Lower(Exception::ExceptionTypeToString(error.Type())).c_str());
-			yyvmf_mut_obj_add_strcpy(doc, result_obj, "error_message", error.RawMessage().c_str());
+			yyjson_mut_obj_add_strcpy(doc, result_obj, "error_message", error.RawMessage().c_str());
 			// add extra info
 			for (auto &entry : error.ExtraInfo()) {
-				yyvmf_mut_obj_add_strcpy(doc, result_obj, entry.first.c_str(), entry.second.c_str());
+				yyjson_mut_obj_add_strcpy(doc, result_obj, entry.first.c_str(), entry.second.c_str());
 			}
 
 			idx_t len;
-			auto data = yyvmf_mut_val_write_opts(result_obj,
+			auto data = yyjson_mut_val_write_opts(result_obj,
 			                                      info.format ? VMFCommon::WRITE_PRETTY_FLAG : VMFCommon::WRITE_FLAG,
 			                                      alc, reinterpret_cast<size_t *>(&len), nullptr);
 			return StringVector::AddString(result, data, len);
@@ -166,35 +166,35 @@ ScalarFunctionSet VMFFunctions::GetSerializeSqlFunction() {
 //----------------------------------------------------------------------
 // VMF DESERIALIZE
 //----------------------------------------------------------------------
-static unique_ptr<SelectStatement> DeserializeSelectStatement(string_t input, yyvmf_alc *alc) {
+static unique_ptr<SelectStatement> DeserializeSelectStatement(string_t input, yyjson_alc *alc) {
 	auto doc = VMFCommon::ReadDocument(input, VMFCommon::READ_FLAG, alc);
 	if (!doc) {
 		throw ParserException("Could not parse vmf");
 	}
 	auto root = doc->root;
-	auto err = yyvmf_obj_get(root, "error");
-	if (err && yyvmf_is_true(err)) {
-		auto err_type = yyvmf_obj_get(root, "error_type");
-		auto err_msg = yyvmf_obj_get(root, "error_message");
+	auto err = yyjson_obj_get(root, "error");
+	if (err && yyjson_is_true(err)) {
+		auto err_type = yyjson_obj_get(root, "error_type");
+		auto err_msg = yyjson_obj_get(root, "error_message");
 		if (err_type && err_msg) {
-			throw ParserException("Error parsing vmf: %s: %s", yyvmf_get_str(err_type), yyvmf_get_str(err_msg));
+			throw ParserException("Error parsing vmf: %s: %s", yyjson_get_str(err_type), yyjson_get_str(err_msg));
 		}
 		throw ParserException(
 		    "Error parsing vmf, expected error property to contain 'error_type' and 'error_message'");
 	}
 
-	auto statements = yyvmf_obj_get(root, "statements");
-	if (!statements || !yyvmf_is_arr(statements)) {
+	auto statements = yyjson_obj_get(root, "statements");
+	if (!statements || !yyjson_is_arr(statements)) {
 		throw ParserException("Error parsing vmf: no statements array");
 	}
-	auto size = yyvmf_arr_size(statements);
+	auto size = yyjson_arr_size(statements);
 	if (size == 0) {
 		throw ParserException("Error parsing vmf: no statements");
 	}
 	if (size > 1) {
 		throw ParserException("Error parsing vmf: more than one statement");
 	}
-	auto stmt_vmf = yyvmf_arr_get(statements, 0);
+	auto stmt_vmf = yyjson_arr_get(statements, 0);
 	VmfDeserializer deserializer(stmt_vmf, doc);
 	auto stmt = SelectStatement::Deserialize(deserializer);
 	if (!stmt->node) {

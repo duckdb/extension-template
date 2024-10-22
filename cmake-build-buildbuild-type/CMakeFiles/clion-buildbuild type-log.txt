@@ -1,0 +1,6 @@
+/home/cdr/clion/bin/cmake/linux/x64/bin/cmake "-DCMAKE_BUILD_TYPE=../build/{build type}" -DCMAKE_MAKE_PROGRAM=/home/cdr/clion/bin/ninja/linux/x64/ninja -G Ninja -S /home/cdr/extension-template -B /home/cdr/extension-template/cmake-build-buildbuild-type
+CMake Error at CMakeLists.txt:19 (build_static_extension):
+  Unknown CMake command "build_static_extension".
+
+
+-- Configuring incomplete, errors occurred!

@@ -2,8 +2,8 @@
 
 namespace duckdb {
 
-static inline list_entry_t GetVMFKeys(yyvmf_val *val, yyvmf_alc *, Vector &result, ValidityMask &, idx_t) {
-	auto num_keys = yyvmf_obj_size(val);
+static inline list_entry_t GetVMFKeys(yyjson_val *val, yyjson_alc *, Vector &result, ValidityMask &, idx_t) {
+	auto num_keys = yyjson_obj_size(val);
 	auto current_size = ListVector::GetListSize(result);
 	auto new_size = current_size + num_keys;
 
@@ -15,9 +15,9 @@ static inline list_entry_t GetVMFKeys(yyvmf_val *val, yyvmf_alc *, Vector &resul
 	// Write the strings to the child vector
 	auto keys = FlatVector::GetData<string_t>(ListVector::GetEntry(result));
 	size_t idx, max;
-	yyvmf_val *key, *child_val;
-	yyvmf_obj_foreach(val, idx, max, key, child_val) {
-		keys[current_size + idx] = string_t(unsafe_yyvmf_get_str(key), unsafe_yyvmf_get_len(key));
+	yyjson_val *key, *child_val;
+	yyjson_obj_foreach(val, idx, max, key, child_val) {
+		keys[current_size + idx] = string_t(unsafe_yyjson_get_str(key), unsafe_yyjson_get_len(key));
 	}
 
 	// Update size

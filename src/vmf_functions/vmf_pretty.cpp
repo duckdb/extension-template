@@ -3,11 +3,11 @@
 namespace duckdb {
 
 //! Pretty Print a given VMF Document
-string_t PrettyPrint(yyvmf_val *val, yyvmf_alc *alc, Vector &, ValidityMask &, idx_t) {
+string_t PrettyPrint(yyjson_val *val, yyjson_alc *alc, Vector &, ValidityMask &, idx_t) {
 	D_ASSERT(alc);
 	idx_t len;
 	auto data =
-	    yyvmf_val_write_opts(val, VMFCommon::WRITE_PRETTY_FLAG, alc, reinterpret_cast<size_t *>(&len), nullptr);
+	    yyjson_val_write_opts(val, VMFCommon::WRITE_PRETTY_FLAG, alc, reinterpret_cast<size_t *>(&len), nullptr);
 	return string_t(data, len);
 }
 

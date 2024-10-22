@@ -174,72 +174,72 @@ struct CreateVMFValue {
 
 template <class INPUT_TYPE>
 struct CreateVMFValue<INPUT_TYPE, bool> {
-	static inline yyvmf_mut_val *Operation(yyvmf_mut_doc *doc, const INPUT_TYPE &input) {
-		return yyvmf_mut_bool(doc, input);
+	static inline yyjson_mut_val *Operation(yyjson_mut_doc *doc, const INPUT_TYPE &input) {
+		return yyjson_mut_bool(doc, input);
 	}
 };
 
 template <class INPUT_TYPE>
 struct CreateVMFValue<INPUT_TYPE, uint64_t> {
-	static inline yyvmf_mut_val *Operation(yyvmf_mut_doc *doc, const INPUT_TYPE &input) {
-		return yyvmf_mut_uint(doc, input);
+	static inline yyjson_mut_val *Operation(yyjson_mut_doc *doc, const INPUT_TYPE &input) {
+		return yyjson_mut_uint(doc, input);
 	}
 };
 
 template <class INPUT_TYPE>
 struct CreateVMFValue<INPUT_TYPE, int64_t> {
-	static inline yyvmf_mut_val *Operation(yyvmf_mut_doc *doc, const INPUT_TYPE &input) {
-		return yyvmf_mut_sint(doc, input);
+	static inline yyjson_mut_val *Operation(yyjson_mut_doc *doc, const INPUT_TYPE &input) {
+		return yyjson_mut_sint(doc, input);
 	}
 };
 
 template <class INPUT_TYPE>
 struct CreateVMFValue<INPUT_TYPE, double> {
-	static inline yyvmf_mut_val *Operation(yyvmf_mut_doc *doc, const INPUT_TYPE &input) {
-		return yyvmf_mut_real(doc, input);
+	static inline yyjson_mut_val *Operation(yyjson_mut_doc *doc, const INPUT_TYPE &input) {
+		return yyjson_mut_real(doc, input);
 	}
 };
 
 template <>
 struct CreateVMFValue<string_t, string_t> {
-	static inline yyvmf_mut_val *Operation(yyvmf_mut_doc *doc, const string_t &input) {
-		return yyvmf_mut_strncpy(doc, input.GetData(), input.GetSize());
+	static inline yyjson_mut_val *Operation(yyjson_mut_doc *doc, const string_t &input) {
+		return yyjson_mut_strncpy(doc, input.GetData(), input.GetSize());
 	}
 };
 
 template <>
 struct CreateVMFValue<hugeint_t, string_t> {
-	static inline yyvmf_mut_val *Operation(yyvmf_mut_doc *doc, const hugeint_t &input) {
+	static inline yyjson_mut_val *Operation(yyjson_mut_doc *doc, const hugeint_t &input) {
 		const auto input_string = input.ToString();
-		return yyvmf_mut_strncpy(doc, input_string.c_str(), input_string.length());
+		return yyjson_mut_strncpy(doc, input_string.c_str(), input_string.length());
 	}
 };
 
 template <>
 struct CreateVMFValue<uhugeint_t, string_t> {
-	static inline yyvmf_mut_val *Operation(yyvmf_mut_doc *doc, const uhugeint_t &input) {
+	static inline yyjson_mut_val *Operation(yyjson_mut_doc *doc, const uhugeint_t &input) {
 		const auto input_string = input.ToString();
-		return yyvmf_mut_strncpy(doc, input_string.c_str(), input_string.length());
+		return yyjson_mut_strncpy(doc, input_string.c_str(), input_string.length());
 	}
 };
 
 template <class T>
-inline yyvmf_mut_val *CreateVMFValueFromVMF(yyvmf_mut_doc *doc, const T &value) {
+inline yyjson_mut_val *CreateVMFValueFromVMF(yyjson_mut_doc *doc, const T &value) {
 	return nullptr; // This function should only be called with string_t as template
 }
 
 template <>
-inline yyvmf_mut_val *CreateVMFValueFromVMF(yyvmf_mut_doc *doc, const string_t &value) {
+inline yyjson_mut_val *CreateVMFValueFromVMF(yyjson_mut_doc *doc, const string_t &value) {
 	auto value_doc = VMFCommon::ReadDocument(value, VMFCommon::READ_FLAG, &doc->alc);
-	auto result = yyvmf_val_mut_copy(doc, value_doc->root);
+	auto result = yyjson_val_mut_copy(doc, value_doc->root);
 	return result;
 }
 
 // Forward declaration so we can recurse for nested types
-static void CreateValues(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v,
+static void CreateValues(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v,
                          idx_t count);
 
-static void AddKeyValuePairs(yyvmf_mut_doc *doc, yyvmf_mut_val *objs[], Vector &key_v, yyvmf_mut_val *vals[],
+static void AddKeyValuePairs(yyjson_mut_doc *doc, yyjson_mut_val *objs[], Vector &key_v, yyjson_mut_val *vals[],
                              idx_t count) {
 	UnifiedVectorFormat key_data;
 	key_v.ToUnifiedFormat(count, key_data);
@@ -251,24 +251,24 @@ static void AddKeyValuePairs(yyvmf_mut_doc *doc, yyvmf_mut_val *objs[], Vector &
 			continue;
 		}
 		auto key = CreateVMFValue<string_t, string_t>::Operation(doc, keys[key_idx]);
-		yyvmf_mut_obj_add(objs[i], key, vals[i]);
+		yyjson_mut_obj_add(objs[i], key, vals[i]);
 	}
 }
 
-static void CreateKeyValuePairs(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *objs[],
-                                yyvmf_mut_val *vals[], Vector &key_v, Vector &value_v, idx_t count) {
+static void CreateKeyValuePairs(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *objs[],
+                                yyjson_mut_val *vals[], Vector &key_v, Vector &value_v, idx_t count) {
 	CreateValues(names, doc, vals, value_v, count);
 	AddKeyValuePairs(doc, objs, key_v, vals, count);
 }
 
-static void CreateValuesNull(yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], idx_t count) {
+static void CreateValuesNull(yyjson_mut_doc *doc, yyjson_mut_val *vals[], idx_t count) {
 	for (idx_t i = 0; i < count; i++) {
-		vals[i] = yyvmf_mut_null(doc);
+		vals[i] = yyjson_mut_null(doc);
 	}
 }
 
 template <class INPUT_TYPE, class TARGET_TYPE>
-static void TemplatedCreateValues(yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v, idx_t count) {
+static void TemplatedCreateValues(yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v, idx_t count) {
 	UnifiedVectorFormat value_data;
 	value_v.ToUnifiedFormat(count, value_data);
 	auto values = UnifiedVectorFormat::GetData<INPUT_TYPE>(value_data);
@@ -277,7 +277,7 @@ static void TemplatedCreateValues(yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vec
 	for (idx_t i = 0; i < count; i++) {
 		idx_t val_idx = value_data.sel->get_index(i);
 		if (!value_data.validity.RowIsValid(val_idx)) {
-			vals[i] = yyvmf_mut_null(doc);
+			vals[i] = yyjson_mut_null(doc);
 		} else if (type_is_vmf) {
 			vals[i] = CreateVMFValueFromVMF(doc, values[val_idx]);
 		} else {
@@ -287,14 +287,14 @@ static void TemplatedCreateValues(yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vec
 	}
 }
 
-static void CreateValuesStruct(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v,
+static void CreateValuesStruct(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v,
                                idx_t count) {
 	// Structs become values, therefore we initialize vals to VMF values
 	for (idx_t i = 0; i < count; i++) {
-		vals[i] = yyvmf_mut_obj(doc);
+		vals[i] = yyjson_mut_obj(doc);
 	}
 	// Initialize re-usable array for the nested values
-	auto nested_vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, count);
+	auto nested_vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, count);
 
 	// Add the key/value pairs to the values
 	auto &entries = StructVector::GetEntries(value_v);
@@ -309,24 +309,24 @@ static void CreateValuesStruct(const StructNames &names, yyvmf_mut_doc *doc, yyv
 	for (idx_t i = 0; i < count; i++) {
 		idx_t idx = struct_data.sel->get_index(i);
 		if (!struct_data.validity.RowIsValid(idx)) {
-			vals[i] = yyvmf_mut_null(doc);
+			vals[i] = yyjson_mut_null(doc);
 		}
 	}
 }
 
-static void CreateValuesMap(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v,
+static void CreateValuesMap(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v,
                             idx_t count) {
 	// Create nested keys
 	auto &map_key_v = MapVector::GetKeys(value_v);
 	auto map_key_count = ListVector::GetListSize(value_v);
 	Vector map_keys_string(LogicalType::VARCHAR, map_key_count);
 	VectorOperations::DefaultCast(map_key_v, map_keys_string, map_key_count);
-	auto nested_keys = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, map_key_count);
+	auto nested_keys = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, map_key_count);
 	TemplatedCreateValues<string_t, string_t>(doc, nested_keys, map_keys_string, map_key_count);
 	// Create nested values
 	auto &map_val_v = MapVector::GetValues(value_v);
 	auto map_val_count = ListVector::GetListSize(value_v);
-	auto nested_vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, map_val_count);
+	auto nested_vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, map_val_count);
 	CreateValues(names, doc, nested_vals, map_val_v, map_val_count);
 	// Add the key/value pairs to the values
 	UnifiedVectorFormat map_data;
@@ -336,43 +336,43 @@ static void CreateValuesMap(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_
 		idx_t idx = map_data.sel->get_index(i);
 		if (!map_data.validity.RowIsValid(idx)) {
 			// Whole map can be NULL
-			vals[i] = yyvmf_mut_null(doc);
+			vals[i] = yyjson_mut_null(doc);
 		} else {
-			vals[i] = yyvmf_mut_obj(doc);
+			vals[i] = yyjson_mut_obj(doc);
 			const auto &key_list_entry = map_key_list_entries[idx];
 			for (idx_t child_i = key_list_entry.offset; child_i < key_list_entry.offset + key_list_entry.length;
 			     child_i++) {
-				if (!unsafe_yyvmf_is_null(nested_keys[child_i])) {
-					yyvmf_mut_obj_add(vals[i], nested_keys[child_i], nested_vals[child_i]);
+				if (!unsafe_yyjson_is_null(nested_keys[child_i])) {
+					yyjson_mut_obj_add(vals[i], nested_keys[child_i], nested_vals[child_i]);
 				}
 			}
 		}
 	}
 }
 
-static void CreateValuesUnion(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v,
+static void CreateValuesUnion(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v,
                               idx_t count) {
 	// Structs become values, therefore we initialize vals to VMF values
 	UnifiedVectorFormat value_data;
 	value_v.ToUnifiedFormat(count, value_data);
 	if (value_data.validity.AllValid()) {
 		for (idx_t i = 0; i < count; i++) {
-			vals[i] = yyvmf_mut_obj(doc);
+			vals[i] = yyjson_mut_obj(doc);
 		}
 	} else {
 		for (idx_t i = 0; i < count; i++) {
 			auto index = value_data.sel->get_index(i);
 			if (!value_data.validity.RowIsValid(index)) {
 				// Make the entry NULL if the Union value is NULL
-				vals[i] = yyvmf_mut_null(doc);
+				vals[i] = yyjson_mut_null(doc);
 			} else {
-				vals[i] = yyvmf_mut_obj(doc);
+				vals[i] = yyjson_mut_obj(doc);
 			}
 		}
 	}
 
 	// Initialize re-usable array for the nested values
-	auto nested_vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, count);
+	auto nested_vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, count);
 
 	auto &tag_v = UnionVector::GetTags(value_v);
 	UnifiedVectorFormat tag_data;
@@ -413,17 +413,17 @@ static void CreateValuesUnion(const StructNames &names, yyvmf_mut_doc *doc, yyvm
 				continue;
 			}
 			auto key = CreateVMFValue<string_t, string_t>::Operation(doc, keys[key_idx]);
-			yyvmf_mut_obj_add(vals[i], key, nested_vals[i]);
+			yyjson_mut_obj_add(vals[i], key, nested_vals[i]);
 		}
 	}
 }
 
-static void CreateValuesList(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v,
+static void CreateValuesList(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v,
                              idx_t count) {
 	// Initialize array for the nested values
 	auto &child_v = ListVector::GetEntry(value_v);
 	auto child_count = ListVector::GetListSize(value_v);
-	auto nested_vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, child_count);
+	auto nested_vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, child_count);
 	// Fill nested_vals with list values
 	CreateValues(names, doc, nested_vals, child_v, child_count);
 	// Now we add the values to the appropriate VMF arrays
@@ -433,18 +433,18 @@ static void CreateValuesList(const StructNames &names, yyvmf_mut_doc *doc, yyvmf
 	for (idx_t i = 0; i < count; i++) {
 		idx_t idx = list_data.sel->get_index(i);
 		if (!list_data.validity.RowIsValid(idx)) {
-			vals[i] = yyvmf_mut_null(doc);
+			vals[i] = yyjson_mut_null(doc);
 		} else {
-			vals[i] = yyvmf_mut_arr(doc);
+			vals[i] = yyjson_mut_arr(doc);
 			const auto &entry = list_entries[idx];
 			for (idx_t child_i = entry.offset; child_i < entry.offset + entry.length; child_i++) {
-				yyvmf_mut_arr_append(vals[i], nested_vals[child_i]);
+				yyjson_mut_arr_append(vals[i], nested_vals[child_i]);
 			}
 		}
 	}
 }
 
-static void CreateValuesArray(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v,
+static void CreateValuesArray(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v,
                               idx_t count) {
 
 	value_v.Flatten(count);
@@ -454,7 +454,7 @@ static void CreateValuesArray(const StructNames &names, yyvmf_mut_doc *doc, yyvm
 	auto array_size = ArrayType::GetSize(value_v.GetType());
 	auto child_count = count * array_size;
 
-	auto nested_vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, child_count);
+	auto nested_vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, child_count);
 	// Fill nested_vals with list values
 	CreateValues(names, doc, nested_vals, child_v, child_count);
 	// Now we add the values to the appropriate VMF arrays
@@ -463,18 +463,18 @@ static void CreateValuesArray(const StructNames &names, yyvmf_mut_doc *doc, yyvm
 	for (idx_t i = 0; i < count; i++) {
 		idx_t idx = list_data.sel->get_index(i);
 		if (!list_data.validity.RowIsValid(idx)) {
-			vals[i] = yyvmf_mut_null(doc);
+			vals[i] = yyjson_mut_null(doc);
 		} else {
-			vals[i] = yyvmf_mut_arr(doc);
+			vals[i] = yyjson_mut_arr(doc);
 			auto offset = idx * array_size;
 			for (idx_t child_i = offset; child_i < offset + array_size; child_i++) {
-				yyvmf_mut_arr_append(vals[i], nested_vals[child_i]);
+				yyjson_mut_arr_append(vals[i], nested_vals[child_i]);
 			}
 		}
 	}
 }
 
-static void CreateValues(const StructNames &names, yyvmf_mut_doc *doc, yyvmf_mut_val *vals[], Vector &value_v,
+static void CreateValues(const StructNames &names, yyjson_mut_doc *doc, yyjson_mut_val *vals[], Vector &value_v,
                          idx_t count) {
 	switch (value_v.GetType().id()) {
 	case LogicalTypeId::SQLNULL:
@@ -587,12 +587,12 @@ static void ObjectFunction(DataChunk &args, ExpressionState &state, Vector &resu
 	// Initialize values
 	const idx_t count = args.size();
 	auto doc = VMFCommon::CreateDocument(alc);
-	auto objs = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, count);
+	auto objs = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, count);
 	for (idx_t i = 0; i < count; i++) {
-		objs[i] = yyvmf_mut_obj(doc);
+		objs[i] = yyjson_mut_obj(doc);
 	}
 	// Initialize a re-usable value array
-	auto vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, count);
+	auto vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, count);
 	// Loop through key/value pairs
 	for (idx_t pair_idx = 0; pair_idx < args.data.size() / 2; pair_idx++) {
 		Vector &key_v = args.data[pair_idx * 2];
@@ -602,7 +602,7 @@ static void ObjectFunction(DataChunk &args, ExpressionState &state, Vector &resu
 	// Write VMF values to string
 	auto objects = FlatVector::GetData<string_t>(result);
 	for (idx_t i = 0; i < count; i++) {
-		objects[i] = VMFCommon::WriteVal<yyvmf_mut_val>(objs[i], alc);
+		objects[i] = VMFCommon::WriteVal<yyjson_mut_val>(objs[i], alc);
 	}
 
 	if (args.AllConstant()) {
@@ -619,23 +619,23 @@ static void ArrayFunction(DataChunk &args, ExpressionState &state, Vector &resul
 	// Initialize arrays
 	const idx_t count = args.size();
 	auto doc = VMFCommon::CreateDocument(alc);
-	auto arrs = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, count);
+	auto arrs = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, count);
 	for (idx_t i = 0; i < count; i++) {
-		arrs[i] = yyvmf_mut_arr(doc);
+		arrs[i] = yyjson_mut_arr(doc);
 	}
 	// Initialize a re-usable value array
-	auto vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, count);
+	auto vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, count);
 	// Loop through args
 	for (auto &v : args.data) {
 		CreateValues(info.const_struct_names, doc, vals, v, count);
 		for (idx_t i = 0; i < count; i++) {
-			yyvmf_mut_arr_append(arrs[i], vals[i]);
+			yyjson_mut_arr_append(arrs[i], vals[i]);
 		}
 	}
 	// Write VMF arrays to string
 	auto objects = FlatVector::GetData<string_t>(result);
 	for (idx_t i = 0; i < count; i++) {
-		objects[i] = VMFCommon::WriteVal<yyvmf_mut_val>(arrs[i], alc);
+		objects[i] = VMFCommon::WriteVal<yyjson_mut_val>(arrs[i], alc);
 	}
 
 	if (args.AllConstant()) {
@@ -644,10 +644,10 @@ static void ArrayFunction(DataChunk &args, ExpressionState &state, Vector &resul
 }
 
 static void ToVMFFunctionInternal(const StructNames &names, Vector &input, const idx_t count, Vector &result,
-                                   yyvmf_alc *alc) {
+                                   yyjson_alc *alc) {
 	// Initialize array for values
 	auto doc = VMFCommon::CreateDocument(alc);
-	auto vals = VMFCommon::AllocateArray<yyvmf_mut_val *>(doc, count);
+	auto vals = VMFCommon::AllocateArray<yyjson_mut_val *>(doc, count);
 	CreateValues(names, doc, vals, input, count);
 
 	// Write VMF values to string
@@ -658,7 +658,7 @@ static void ToVMFFunctionInternal(const StructNames &names, Vector &input, const
 	for (idx_t i = 0; i < count; i++) {
 		idx_t idx = input_data.sel->get_index(i);
 		if (input_data.validity.RowIsValid(idx)) {
-			objects[i] = VMFCommon::WriteVal<yyvmf_mut_val>(vals[i], alc);
+			objects[i] = VMFCommon::WriteVal<yyjson_mut_val>(vals[i], alc);
 		} else {
 			result_validity.SetInvalid(i);
 		}

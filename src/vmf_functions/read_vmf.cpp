@@ -325,7 +325,7 @@ static void ReadVMFFunction(ClientContext &context, TableFunctionInput &data_p, 
 	auto &lstate = data_p.local_state->Cast<VMFLocalTableFunctionState>().state;
 
 	const auto count = lstate.ReadNext(gstate);
-	yyvmf_val **values = lstate.values;
+	yyjson_val **values = lstate.values;
 	output.SetCardinality(count);
 
 	if (!gstate.names.empty()) {
