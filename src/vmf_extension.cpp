@@ -1,52 +1,77 @@
 #define DUCKDB_EXTENSION_MAIN
-
 #include "vmf_extension.hpp"
-#include "duckdb.hpp"
-#include "duckdb/common/exception.hpp"
-#include "duckdb/common/string_util.hpp"
-#include "duckdb/function/scalar_function.hpp"
-#include "duckdb/main/extension_util.hpp"
-#include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
 
-// OpenSSL linked through vcpkg
-#include <openssl/opensslv.h>
+#include "duckdb/catalog/catalog_entry/macro_catalog_entry.hpp"
+#include "duckdb/catalog/default/default_functions.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/function/copy_function.hpp"
+#include "duckdb/main/extension_util.hpp"
+#include "duckdb/parser/expression/constant_expression.hpp"
+#include "duckdb/parser/expression/function_expression.hpp"
+#include "duckdb/parser/parsed_data/create_pragma_function_info.hpp"
+#include "duckdb/parser/parsed_data/create_type_info.hpp"
+#include "duckdb/parser/tableref/table_function_ref.hpp"
+#include "include/vmf_common.hpp"
+#include "vmf_functions.hpp"
 
 namespace duckdb {
 
-inline void VmfScalarFun(DataChunk &args, ExpressionState &state, Vector &result) {
-    auto &name_vector = args.data[0];
-    UnaryExecutor::Execute<string_t, string_t>(
-	    name_vector, result, args.size(),
-	    [&](string_t name) {
-			return StringVector::AddString(result, "Vmf "+name.GetString()+" 🐥");;
-        });
-}
-
-inline void VmfOpenSSLVersionScalarFun(DataChunk &args, ExpressionState &state, Vector &result) {
-    auto &name_vector = args.data[0];
-    UnaryExecutor::Execute<string_t, string_t>(
-	    name_vector, result, args.size(),
-	    [&](string_t name) {
-			return StringVector::AddString(result, "Vmf " + name.GetString() +
-                                                     ", my linked OpenSSL version is " +
-                                                     OPENSSL_VERSION_TEXT );;
-        });
-}
-
-static void LoadInternal(DatabaseInstance &instance) {
-    // Register a scalar function
-    auto vmf_scalar_function = ScalarFunction("vmf", {LogicalType::VARCHAR}, LogicalType::VARCHAR, VmfScalarFun);
-    ExtensionUtil::RegisterFunction(instance, vmf_scalar_function);
-
-    // Register another scalar function
-    auto vmf_openssl_version_scalar_function = ScalarFunction("vmf_openssl_version", {LogicalType::VARCHAR},
-                                                LogicalType::VARCHAR, VmfOpenSSLVersionScalarFun);
-    ExtensionUtil::RegisterFunction(instance, vmf_openssl_version_scalar_function);
-}
+static DefaultMacro vmf_macros[] = {
+    {DEFAULT_SCHEMA, "vmf_group_array", {"x", nullptr}, {{nullptr, nullptr}}, "to_vmf(list(x))"},
+    {DEFAULT_SCHEMA,
+     "vmf_group_object",
+     {"name", "value", nullptr},
+     {{nullptr, nullptr}},
+     "to_vmf(map(list(name), list(value)))"},
+    {DEFAULT_SCHEMA,
+     "vmf_group_structure",
+     {"x", nullptr},
+     {{nullptr, nullptr}},
+     "vmf_structure(vmf_group_array(x))->0"},
+    {DEFAULT_SCHEMA, "vmf", {"x", nullptr}, {{nullptr, nullptr}}, "vmf_extract(x, '$')"},
+    {nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}};
 
 void VmfExtension::Load(DuckDB &db) {
-	LoadInternal(*db.instance);
+	auto &db_instance = *db.instance;
+	// VMF type
+	auto vmf_type = LogicalType::VMF();
+	ExtensionUtil::RegisterType(db_instance, LogicalType::VMF_TYPE_NAME, std::move(vmf_type));
+
+    // VMF casts
+	VMFFunctions::RegisterSimpleCastFunctions(DBConfig::GetConfig(db_instance).GetCastFunctions());
+	VMFFunctions::RegisterVMFCreateCastFunctions(DBConfig::GetConfig(db_instance).GetCastFunctions());
+	VMFFunctions::RegisterVMFTransformCastFunctions(DBConfig::GetConfig(db_instance).GetCastFunctions());
+
+	// VMF scalar functions
+	for (auto &fun : VMFFunctions::GetScalarFunctions()) {
+		ExtensionUtil::RegisterFunction(db_instance, fun);
+	}
+
+	// VMF table functions
+	for (auto &fun : VMFFunctions::GetTableFunctions()) {
+		ExtensionUtil::RegisterFunction(db_instance, fun);
+	}
+
+	// VMF pragma functions
+	for (auto &fun : VMFFunctions::GetPragmaFunctions()) {
+		ExtensionUtil::RegisterFunction(db_instance, fun);
+	}
+
+	// VMF replacement scan
+	auto &config = DBConfig::GetConfig(*db.instance);
+	config.replacement_scans.emplace_back(VMFFunctions::ReadVMFReplacement);
+
+	// VMF copy function
+	auto copy_fun = VMFFunctions::GetVMFCopyFunction();
+	ExtensionUtil::RegisterFunction(db_instance, std::move(copy_fun));
+
+	// VMF macro's
+	for (idx_t index = 0; vmf_macros[index].name != nullptr; index++) {
+		auto info = DefaultFunctionGenerator::CreateInternalMacroInfo(vmf_macros[index]);
+		ExtensionUtil::RegisterFunction(db_instance, *info);
+	}
 }
+
 std::string VmfExtension::Name() {
 	return "vmf";
 }
@@ -64,8 +89,8 @@ std::string VmfExtension::Version() const {
 extern "C" {
 
 DUCKDB_EXTENSION_API void vmf_init(duckdb::DatabaseInstance &db) {
-    duckdb::DuckDB db_wrapper(db);
-    db_wrapper.LoadExtension<duckdb::VmfExtension>();
+	duckdb::DuckDB db_wrapper(db);
+	db_wrapper.LoadExtension<duckdb::VmfExtension>();
 }
 
 DUCKDB_EXTENSION_API const char *vmf_version() {

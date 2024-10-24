@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/cdr/Downloads/extension-template/build/debug/duckdb",
+            "program": "/home/cdr/extension-template/build/debug/duckdb",
             "args": ["unsigned"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
