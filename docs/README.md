@@ -17,6 +17,10 @@ git clone https://github.com/Microsoft/vcpkg.git
 sh ./vcpkg/scripts/bootstrap.sh -disableMetrics
 export VCPKG_TOOLCHAIN_PATH=`pwd`/vcpkg/scripts/buildsystems/vcpkg.cmake
 ```
+If building on macOS, ensure that pkg-config is installed.
+```shell
+brew install pkg-config
+```
 Note: VCPKG is only required for extensions that want to rely on it for dependency management. If you want to develop an extension without dependencies, or want to do your own dependency management, just skip this step. Note that the example extension uses VCPKG to build with a dependency for instructive purposes, so when skipping this step the build may not work without removing the dependency.
 
 ### Build steps
