@@ -12,18 +12,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  duckdb-next-build:
-    name: Build extension binaries
-    uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@main
-    with:
-      duckdb_version: v1.4.0
-      extension_name: quack
-      ci_tools_version: main
-
   duckdb-stable-build:
     name: Build extension binaries
     uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@v1.4.0
-    if: false # This branch is not compatible with latest stable, TODO: remove when merging this branch back into main
     with:
       duckdb_version: v1.4.0
       ci_tools_version: v1.4.0
@@ -31,9 +22,9 @@ jobs:
 
   code-quality-check:
     name: Code Quality Check
-    uses: duckdb/extension-ci-tools/.github/workflows/_extension_code_quality.yml@main
+    uses: duckdb/extension-ci-tools/.github/workflows/_extension_code_quality.yml@v1.4.0
     with:
-      duckdb_version: main # TODO: revert to latest stable probably
-      ci_tools_version: main
+      duckdb_version: v1.4.0
+      ci_tools_version: v1.4.0
       extension_name: quack
       format_checks: 'format;tidy'
