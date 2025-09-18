@@ -22,9 +22,9 @@ jobs:
 
   code-quality-check:
     name: Code Quality Check
-    uses: duckdb/extension-ci-tools/.github/workflows/_extension_code_quality.yml@main
+    uses: duckdb/extension-ci-tools/.github/workflows/_extension_code_quality.yml@v1.4.0
     with:
-      duckdb_version: main # TODO: revert to latest stable probably
-      ci_tools_version: main
+      duckdb_version: v1.4.0
+      ci_tools_version: v1.4.0
       extension_name: quack
       format_checks: 'format;tidy'
