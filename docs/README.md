@@ -19,6 +19,34 @@ export VCPKG_TOOLCHAIN_PATH=`pwd`/vcpkg/scripts/buildsystems/vcpkg.cmake
 ```
 Note: VCPKG is only required for extensions that want to rely on it for dependency management. If you want to develop an extension without dependencies, or want to do your own dependency management, just skip this step. Note that the example extension uses VCPKG to build with a dependency for instructive purposes, so when skipping this step the build may not work without removing the dependency.
 
+### Updating Submodules
+DuckDB extensions uses two submodules that are included in your forked extension repo when you use the `--recurse-submodules` flag. These modules are:
+
+| Name                  | Repository                                      | Description |
+|-----------------------|-------------------------------------------------|-------------|
+| duckdb                | https://github.com/duckdb/duckdb                | This repository contains core DuckDB code required for building extensions.            |
+| extension-ci-tools    | https://github.com/duckdb/extension-ci-tools    | This repository contains reusable components for building, testing and deploying DuckDB extensions.            |
+
+
+> [!IMPORTANT]  
+> It is recommended that you update your submodules at least once every other major LTS release to avoid CI/CD pipeline build errors caused by remaining pinned to a stale commit of these submodules.
+
+To update all submodules to the latest commit hash:
+```bash
+git submodule update --init --recursive
+```
+
+To update your submodules to a specific commit hash, for example `8e146474d7adb960c5a2941142fe4482cc7dfc08`:
+```bash
+cd duckdb #or extension-ci-tools
+git fetch --all
+git checkout 8e146474d7adb960c5a2941142fe4482cc7dfc08   # or any tag/branch/commit hash
+cd ..
+git add duckdb
+git commit -m "Pin DuckDB submodule to cc7dfc08"
+git push HEAD:update-submodule-branch
+```
+
 ### Build steps
 Now to build the extension, run:
 ```sh
