@@ -36,7 +36,7 @@ To update all submodules to the latest commit hash:
 git submodule update --init --recursive
 ```
 
-To update your submodules to a specific commit hash, for example `8e146474d7adb960c5a2941142fe4482cc7dfc08`:
+To update your submodules to a specific commit hash, for example to update duckdb to the hash `8e146474d7adb960c5a2941142fe4482cc7dfc08`:
 ```bash
 cd duckdb 
 git fetch --all
