@@ -6,11 +6,9 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' && github.sha || '' }}
   cancel-in-progress: true
-
 jobs:
   duckdb-stable-build:
     name: Build extension binaries
@@ -19,7 +17,7 @@ jobs:
       duckdb_version: v1.4.3
       ci_tools_version: v1.4.3
       extension_name: quack
-
+    if: (github.event_name != 'push' || !contains(join(github.event.commits.*.message, ' '), env.SKIP_CI_PATTERN)) && (github.event_name != 'pull_request' || !contains(github.event.pull_request.title, env.SKIP_CI_PATTERN))
   code-quality-check:
     name: Code Quality Check
     uses: duckdb/extension-ci-tools/.github/workflows/_extension_code_quality.yml@v1.4.3
@@ -28,3 +26,6 @@ jobs:
       ci_tools_version: v1.4.3
       extension_name: quack
       format_checks: 'format;tidy'
+    if: (github.event_name != 'push' || !contains(join(github.event.commits.*.message, ' '), env.SKIP_CI_PATTERN)) && (github.event_name != 'pull_request' || !contains(github.event.pull_request.title, env.SKIP_CI_PATTERN))
+env:
+  SKIP_CI_PATTERN: '[SKIP_CI] bump to'
