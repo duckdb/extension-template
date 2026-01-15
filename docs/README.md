@@ -17,7 +17,7 @@ DuckDB extensions uses VCPKG for dependency management. Enabling VCPKG is very s
 ```shell
 cd <your-working-dir-not-the-plugin-repo>
 git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg && git checkout ce613c41372b23b1f51333815feb3edd87ef8a8b
+cd vcpkg && git checkout 84bab45d415d22042bd0b9081aea57f362da3f35
 sh ./scripts/bootstrap.sh -disableMetrics
 export VCPKG_TOOLCHAIN_PATH=`pwd`/vcpkg/scripts/buildsystems/vcpkg.cmake
 ```
