@@ -1,0 +1,23 @@
+# name: test/sql/duck_geoarrow.test
+# description: test duck_geoarrow extension
+# group: [sql]
+
+# Before we load the extension, this will fail
+statement error
+SELECT duck_geoarrow('Sam');
+----
+Catalog Error: Scalar Function with name duck_geoarrow does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require duck_geoarrow
+
+# Confirm the extension works
+query I
+SELECT duck_geoarrow('Sam');
+----
+DuckGeoarrow Sam 🐥
+
+query I
+SELECT duck_geoarrow_openssl_version('Michael') ILIKE 'DuckGeoarrow Michael, my linked OpenSSL version is OpenSSL%';
+----
+true
