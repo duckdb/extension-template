@@ -6,3 +6,6 @@
 	path = extension-ci-tools
 	url = https://github.com/duckdb/extension-ci-tools
 	branch = main
+[submodule "third-party/geoarrow-c"]
+	path = third-party/geoarrow-c
+	url = https://github.com/geoarrow/geoarrow-c
