@@ -1,5 +1,8 @@
 PROJ_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
+# Use ninja for faster builds
+GEN ?= ninja
+
 # Configuration of extension
 EXT_NAME=duck_geoarrow
 EXT_CONFIG=${PROJ_DIR}extension_config.cmake

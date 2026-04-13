@@ -2,10 +2,13 @@
 	path = duckdb
 	url = https://github.com/duckdb/duckdb
 	branch = main
+	ignore = dirty
 [submodule "extension-ci-tools"]
 	path = extension-ci-tools
 	url = https://github.com/duckdb/extension-ci-tools
 	branch = main
+	ignore = dirty
 [submodule "third-party/geoarrow-c"]
 	path = third-party/geoarrow-c
 	url = https://github.com/geoarrow/geoarrow-c
+	ignore = dirty

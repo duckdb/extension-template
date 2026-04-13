@@ -4,20 +4,65 @@
 
 # Before we load the extension, this will fail
 statement error
-SELECT duck_geoarrow('Sam');
+SELECT st_asgeoarrow('POINT(0 0)'::GEOMETRY);
 ----
-Catalog Error: Scalar Function with name duck_geoarrow does not exist!
+Catalog Error: Scalar Function with name st_asgeoarrow does not exist!
 
 # Require statement will ensure this test is run with this extension loaded
 require duck_geoarrow
 
-# Confirm the extension works
+# Test duck_geoarrow_version
 query I
-SELECT duck_geoarrow('Sam');
-----
-DuckGeoarrow Sam 🐥
-
-query I
-SELECT duck_geoarrow_openssl_version('Michael') ILIKE 'DuckGeoarrow Michael, my linked OpenSSL version is OpenSSL%';
+SELECT duck_geoarrow_version() ILIKE '%geoarrow-c%';
 ----
 true
+
+# Test st_asgeoarrow with GEOMETRY input
+query I
+SELECT (st_asgeoarrow('POINT(30 10)'::GEOMETRY)).geometry_type;
+----
+1
+
+query I
+SELECT (st_asgeoarrow('POINT(30 10)'::GEOMETRY)).xs;
+----
+[30.0]
+
+query I
+SELECT (st_asgeoarrow('LINESTRING(0 0, 1 1, 2 2)'::GEOMETRY)).geometry_type;
+----
+2
+
+query I
+SELECT (st_asgeoarrow('LINESTRING(0 0, 1 1, 2 2)'::GEOMETRY)).xs;
+----
+[0.0, 1.0, 2.0]
+
+# Test st_asgeoarrow with BLOB (WKB) input
+query I
+SELECT (st_asgeoarrow(unhex('01010000000000000000003e400000000000002440'))).xs;
+----
+[30.0]
+
+# Test st_geomfromgeoarrow returns GEOMETRY type
+query I
+SELECT typeof(st_geomfromgeoarrow(st_asgeoarrow('POINT(1 2)'::GEOMETRY)));
+----
+GEOMETRY
+
+# Test roundtrip: GEOMETRY → GeoArrow → GEOMETRY
+query I
+SELECT st_geomfromgeoarrow(st_asgeoarrow('POINT(30 10)'::GEOMETRY));
+----
+POINT (30 10)
+
+query I
+SELECT st_geomfromgeoarrow(st_asgeoarrow('POLYGON((0 0, 4 0, 4 4, 0 4, 0 0))'::GEOMETRY));
+----
+POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))
+
+# Test polygon with ring_offsets
+query I
+SELECT (st_asgeoarrow('POLYGON((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 2 1, 2 2, 1 2, 1 1))'::GEOMETRY)).ring_offsets;
+----
+[5, 10]
