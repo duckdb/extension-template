@@ -43,8 +43,7 @@ static int ExtractFeatStart(struct GeoArrowVisitor *v) {
 	return GEOARROW_OK;
 }
 
-static int ExtractGeomStart(struct GeoArrowVisitor *v, enum GeoArrowGeometryType type,
-                            enum GeoArrowDimensions dims) {
+static int ExtractGeomStart(struct GeoArrowVisitor *v, enum GeoArrowGeometryType type, enum GeoArrowDimensions dims) {
 	(void)dims;
 	auto *ext = static_cast<CoordExtractor *>(v->private_data);
 	if (ext->depth == 0) {
@@ -79,8 +78,7 @@ static int ExtractGeomEnd(struct GeoArrowVisitor *v) {
 	ext->depth--;
 	if (ext->depth == 1) {
 		auto root_type = static_cast<enum GeoArrowGeometryType>(ext->geometry_type);
-		if (root_type == GEOARROW_GEOMETRY_TYPE_MULTIPOINT ||
-		    root_type == GEOARROW_GEOMETRY_TYPE_MULTILINESTRING) {
+		if (root_type == GEOARROW_GEOMETRY_TYPE_MULTIPOINT || root_type == GEOARROW_GEOMETRY_TYPE_MULTILINESTRING) {
 			ext->ring_offsets.push_back(static_cast<int32_t>(ext->xs.size()));
 		} else if (root_type == GEOARROW_GEOMETRY_TYPE_MULTIPOLYGON) {
 			ext->geom_offsets.push_back(static_cast<int32_t>(ext->ring_offsets.size()));
@@ -218,7 +216,6 @@ static void StAsGeoArrowWKBFun(DataChunk &args, ExpressionState &state, Vector &
 	GeoArrowWKBReaderReset(&wkb_reader);
 }
 
-
 // --- st_geomfromgeoarrow: GeoArrow STRUCT → WKB BLOB ---
 
 // Helper: build a GeoArrowCoordView from separated x/y arrays
@@ -235,8 +232,8 @@ static struct GeoArrowCoordView MakeCoordView(const double *xs, const double *ys
 
 // Drive visitor callbacks to produce WKB from extracted coordinate data
 static void DriveVisitor(struct GeoArrowVisitor *v, uint8_t geom_type, const double *xs, const double *ys,
-                         idx_t num_coords, const int32_t *ring_offs, idx_t num_ring_offs,
-                         const int32_t *geom_offs, idx_t num_geom_offs) {
+                         idx_t num_coords, const int32_t *ring_offs, idx_t num_ring_offs, const int32_t *geom_offs,
+                         idx_t num_geom_offs) {
 	auto gt = static_cast<enum GeoArrowGeometryType>(geom_type);
 	auto dims = GEOARROW_DIMENSIONS_XY;
 
