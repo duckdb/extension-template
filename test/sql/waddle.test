@@ -1,0 +1,23 @@
+# name: test/sql/waddle.test
+# description: test waddle extension
+# group: [sql]
+
+# Before we load the extension, this will fail
+statement error
+SELECT waddle('Sam');
+----
+Catalog Error: Scalar Function with name waddle does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require waddle
+
+# Confirm the extension works
+query I
+SELECT waddle('Sam');
+----
+...........🦆 Sam
+
+query I
+SELECT waddle_openssl_version('Michael') ILIKE 'Waddle Michael, my linked OpenSSL version is OpenSSL%';
+----
+true
