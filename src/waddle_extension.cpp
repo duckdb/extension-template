@@ -27,16 +27,41 @@ inline void WaddleOpenSSLVersionScalarFun(DataChunk &args, ExpressionState &stat
 }
 
 static void LoadInternal(ExtensionLoader &loader) {
-	// Register a scalar function
-	auto waddle_scalar_function =
-	    ScalarFunction("waddle", {LogicalType::VARCHAR}, LogicalType::VARCHAR, WaddleScalarFun);
+	// Register a scalar function. Going through CreateScalarFunctionInfo instead of passing the
+	// ScalarFunction directly lets us attach a FunctionDescription, which is what makes the function
+	// self-documenting: its description, parameter names, examples and categories all show up in
+	// duckdb_functions().
+	{
+		CreateScalarFunctionInfo info(
+		    ScalarFunction("waddle", {LogicalType::VARCHAR}, LogicalType::VARCHAR, WaddleScalarFun));
 
-	loader.RegisterFunction(waddle_scalar_function);
+		FunctionDescription desc;
+		desc.parameter_names = {"name"};
+		desc.description = "Returns `name` prefixed with a waddling duck.";
+		desc.examples = {"waddle('Jane')"};
+		desc.categories = {"string"};
+		info.descriptions.push_back(std::move(desc));
+
+		// ALTER_ON_CONFLICT adds an overload if a function with this name already exists
+		info.on_conflict = OnCreateConflict::ALTER_ON_CONFLICT;
+		loader.RegisterFunction(std::move(info));
+	}
 
 	// Register another scalar function
-	auto waddle_openssl_version_scalar_function = ScalarFunction("waddle_openssl_version", {LogicalType::VARCHAR},
-	                                                             LogicalType::VARCHAR, WaddleOpenSSLVersionScalarFun);
-	loader.RegisterFunction(waddle_openssl_version_scalar_function);
+	{
+		CreateScalarFunctionInfo info(ScalarFunction("waddle_openssl_version", {LogicalType::VARCHAR},
+		                                             LogicalType::VARCHAR, WaddleOpenSSLVersionScalarFun));
+
+		FunctionDescription desc;
+		desc.parameter_names = {"name"};
+		desc.description = "Returns `name` together with the OpenSSL version this extension was linked against.";
+		desc.examples = {"waddle_openssl_version('Michael')"};
+		desc.categories = {"string"};
+		info.descriptions.push_back(std::move(desc));
+
+		info.on_conflict = OnCreateConflict::ALTER_ON_CONFLICT;
+		loader.RegisterFunction(std::move(info));
+	}
 }
 
 void WaddleExtension::Load(ExtensionLoader &loader) {
