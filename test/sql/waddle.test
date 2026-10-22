@@ -21,3 +21,15 @@ query I
 SELECT waddle_openssl_version('Michael') ILIKE 'Waddle Michael, my linked OpenSSL version is OpenSSL%';
 ----
 true
+
+# The example functions are self-documenting: the FunctionDescription registered alongside each
+# function is what duckdb_functions() reports back. Note that `parameters` holds the real parameter
+# name rather than a placeholder such as 'col0'.
+query IIIII
+SELECT function_name, description IS NOT NULL, parameters[1], len(examples) > 0, len(categories) > 0
+FROM duckdb_functions()
+WHERE function_name IN ('waddle', 'waddle_openssl_version')
+ORDER BY function_name;
+----
+waddle	true	name	true	true
+waddle_openssl_version	true	name	true	true

@@ -120,6 +120,29 @@ D select <extension_name_you_chose>('Jane') as result;
 For inspiration/examples on how to extend DuckDB in a more meaningful way, check out the [test extensions](https://github.com/duckdb/duckdb/blob/main/test/extension),
 the [in-tree extensions](https://github.com/duckdb/duckdb/tree/main/extension), and the [out-of-tree extensions](https://github.com/duckdblabs).
 
+### Documenting your functions
+Functions registered with the plain `loader.RegisterFunction(my_function)` overload land in the catalog without any
+metadata: `duckdb_functions()` reports a `NULL` description and placeholder parameter names (`col0`, `col1`, ...).
+Registering through a `CreateScalarFunctionInfo` instead lets you attach a `FunctionDescription`, so that users and
+tooling can discover what your function does and how to call it without leaving the database. The example functions in
+`src/<extension_name>_extension.cpp` show the pattern:
+```cpp
+CreateScalarFunctionInfo info(
+    ScalarFunction("waddle", {LogicalType::VARCHAR}, LogicalType::VARCHAR, WaddleScalarFun));
+
+FunctionDescription desc;
+desc.parameter_names = {"name"};
+desc.description = "Returns `name` prefixed with a waddling duck.";
+desc.examples = {"waddle('Jane')"};
+desc.categories = {"string"};
+info.descriptions.push_back(std::move(desc));
+
+info.on_conflict = OnCreateConflict::ALTER_ON_CONFLICT;
+loader.RegisterFunction(std::move(info));
+```
+Aggregate and table functions take the same `FunctionDescription` through `CreateAggregateFunctionInfo` and
+`CreateTableFunctionInfo`.
+
 ## Distributing your extension
 To distribute your extension binaries, there are a few options.
 
